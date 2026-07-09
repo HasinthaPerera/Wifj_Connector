@@ -1,11 +1,17 @@
 import { type HTMLAttributes } from 'react'
 
 interface ProgressBarProps extends HTMLAttributes<HTMLDivElement> {
+  /** The current numeric progress value */
   value: number
+  /** The upper limit for the progress value */
   max?: number
+  /** Height dimension of the progress container */
   size?: 'sm' | 'md' | 'lg'
+  /** Color theme of the filled bar */
   variant?: 'primary' | 'accent' | 'warning' | 'danger' | 'gradient'
+  /** Render standard percentage label text on the top right */
   showLabel?: boolean
+  /** Enable smooth CSS animation on value changes */
   animated?: boolean
 }
 
@@ -23,6 +29,11 @@ const sizeClasses: Record<string, string> = {
   lg: 'h-4'
 }
 
+/**
+ * Standard Progress Bar indicator.
+ * Supports multiple size thickness classes, state coloring schemes,
+ * and ARIA attributes for accessibility.
+ */
 function ProgressBar({
   value,
   max = 100,

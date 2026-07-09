@@ -1,20 +1,19 @@
 import { type HTMLAttributes, forwardRef } from 'react'
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  /** Visual variation of the card layout */
   variant?: 'default' | 'outlined' | 'glass' | 'gradient'
+  /** Inner padding sizing */
   padding?: 'none' | 'sm' | 'md' | 'lg'
+  /** Enable hover scale and shadow transitions */
   hoverable?: boolean
 }
 
 const variantClasses: Record<string, string> = {
-  default:
-    'bg-[var(--bg-card)] border border-[var(--border-color)] shadow-card',
-  outlined:
-    'bg-transparent border border-[var(--border-color)]',
-  glass:
-    'glass shadow-card',
-  gradient:
-    'gradient-primary text-white border-0'
+  default: 'bg-[var(--bg-card)] border border-[var(--border-color)] shadow-card',
+  outlined: 'bg-transparent border border-[var(--border-color)]',
+  glass: 'glass shadow-card',
+  gradient: 'gradient-primary text-white border-0'
 }
 
 const paddingClasses: Record<string, string> = {
@@ -24,6 +23,11 @@ const paddingClasses: Record<string, string> = {
   lg: 'p-7'
 }
 
+/**
+ * Standard container component.
+ * Provides multiple theme variations (default, outlined, glassmorphism, gradient),
+ * custom sizing paddings, and animated hover effects.
+ */
 const Card = forwardRef<HTMLDivElement, CardProps>(
   (
     { variant = 'default', padding = 'md', hoverable = false, className = '', children, ...props },
@@ -50,12 +54,20 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = 'Card'
 
 interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
+  /** The main bold title of the card header */
   title: string
+  /** Subtext description under the title */
   subtitle?: string
+  /** Action node rendered on the top right side (e.g. badge, button) */
   action?: React.ReactNode
+  /** Left side decorative/context icon */
   icon?: React.ReactNode
 }
 
+/**
+ * Clean card header component.
+ * Displays title, optional description, optional icon, and optional actions.
+ */
 function CardHeader({
   title,
   subtitle,
@@ -86,11 +98,11 @@ function CardHeader({
 
 interface CardContentProps extends HTMLAttributes<HTMLDivElement> {}
 
-function CardContent({
-  className = '',
-  children,
-  ...props
-}: CardContentProps): React.JSX.Element {
+/**
+ * Standard content wrapper within a Card.
+ * Sets the default spacing and alignment for children items.
+ */
+function CardContent({ className = '', children, ...props }: CardContentProps): React.JSX.Element {
   return (
     <div className={`mt-4 ${className}`} {...props}>
       {children}

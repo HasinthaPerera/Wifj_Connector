@@ -1,8 +1,11 @@
 import { useState, type HTMLAttributes } from 'react'
 
 interface TooltipProps extends HTMLAttributes<HTMLDivElement> {
+  /** The text content to display inside the tooltip popup box */
   content: string
+  /** The anchor position relative to the child trigger element */
   position?: 'top' | 'bottom' | 'left' | 'right'
+  /** The duration in milliseconds to wait before rendering the tooltip */
   delay?: number
 }
 
@@ -15,11 +18,18 @@ const positionClasses: Record<string, string> = {
 
 const arrowClasses: Record<string, string> = {
   top: 'top-full left-1/2 -translate-x-1/2 border-t-surface-800 dark:border-t-surface-200 border-l-transparent border-r-transparent border-b-transparent',
-  bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-surface-800 dark:border-b-surface-200 border-l-transparent border-r-transparent border-t-transparent',
+  bottom:
+    'bottom-full left-1/2 -translate-x-1/2 border-b-surface-800 dark:border-b-surface-200 border-l-transparent border-r-transparent border-t-transparent',
   left: 'left-full top-1/2 -translate-y-1/2 border-l-surface-800 dark:border-l-surface-200 border-t-transparent border-b-transparent border-r-transparent',
-  right: 'right-full top-1/2 -translate-y-1/2 border-r-surface-800 dark:border-r-surface-200 border-t-transparent border-b-transparent border-l-transparent'
+  right:
+    'right-full top-1/2 -translate-y-1/2 border-r-surface-800 dark:border-r-surface-200 border-t-transparent border-b-transparent border-l-transparent'
 }
 
+/**
+ * Standard utility Tooltip.
+ * Automatically handles hover triggers, focus triggers, arrow direction offsets,
+ * fade-in transitions, and dark mode variations.
+ */
 function Tooltip({
   content,
   position = 'top',

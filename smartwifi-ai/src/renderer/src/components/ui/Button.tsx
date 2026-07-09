@@ -1,13 +1,21 @@
 import { type ButtonHTMLAttributes, forwardRef } from 'react'
 
+/** Style variants for the Button component */
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent'
+
+/** Size constraints for the Button component */
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** The theme/color layout of the button */
   variant?: ButtonVariant
+  /** Control the padding and font size of the button */
   size?: ButtonSize
+  /** Show a loading spinner and disable interactions */
   isLoading?: boolean
+  /** Render an element (typically an icon) to the left of the button text */
   leftIcon?: React.ReactNode
+  /** Render an element (typically an icon) to the right of the button text */
   rightIcon?: React.ReactNode
 }
 
@@ -30,6 +38,10 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: 'px-6 py-2.5 text-base gap-2.5 rounded-lg'
 }
 
+/**
+ * A highly interactive, reusable Button component.
+ * Supports primary/secondary/ghost/danger/accent variants, sizes, loading spinners, and icons.
+ */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {

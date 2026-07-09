@@ -30,9 +30,7 @@ const navigationSections: NavigationSection[] = [
   {
     id: 'overview',
     title: 'Overview',
-    items: [
-      { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', path: '/' }
-    ]
+    items: [{ id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', path: '/' }]
   },
   {
     id: 'network',
@@ -134,7 +132,9 @@ function RootLayout(): React.JSX.Element {
           </div>
           {!sidebarCollapsed && (
             <div className="min-w-0 animate-fade-in">
-              <h1 className="text-sm font-bold text-[var(--text-primary)] truncate">SmartWiFi AI</h1>
+              <h1 className="text-sm font-bold text-[var(--text-primary)] truncate">
+                SmartWiFi AI
+              </h1>
               <p className="text-[10px] text-[var(--text-muted)] truncate">Network Assistant</p>
             </div>
           )}
@@ -170,12 +170,8 @@ function RootLayout(): React.JSX.Element {
                           `.trim()
                         }
                       >
-                        {IconComponent && (
-                          <IconComponent size={18} className="flex-shrink-0" />
-                        )}
-                        {!sidebarCollapsed && (
-                          <span className="truncate">{item.label}</span>
-                        )}
+                        {IconComponent && <IconComponent size={18} className="flex-shrink-0" />}
+                        {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                         {!sidebarCollapsed && item.badge && (
                           <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
                             {item.badge}

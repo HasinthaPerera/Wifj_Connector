@@ -1,12 +1,19 @@
 import { useEffect, useRef, type HTMLAttributes } from 'react'
 
 interface ModalProps extends HTMLAttributes<HTMLDivElement> {
+  /** If true, the modal dialog is rendered and displayed */
   isOpen: boolean
+  /** Callback function triggered when modal requests to close (ESC key, overlay click, close button) */
   onClose: () => void
+  /** Main header title of the modal */
   title?: string
+  /** Horizontal max-width size constraint of the dialog */
   size?: 'sm' | 'md' | 'lg' | 'xl'
+  /** Enable closing the modal when clicking outside the dialog card */
   closeOnOverlayClick?: boolean
+  /** Render the standard header top-right close cross button */
   showCloseButton?: boolean
+  /** Render custom footer buttons (typically cancel/confirm button actions) */
   footer?: React.ReactNode
 }
 
@@ -17,6 +24,11 @@ const sizeClasses: Record<string, string> = {
   xl: 'max-w-xl'
 }
 
+/**
+ * Clean overlay modal dialog.
+ * Provides backdrop-blur layout, ESC dismiss, focus trapping, scroll prevention,
+ * entry slide-in transitions, and clean theme styling.
+ */
 function Modal({
   isOpen,
   onClose,
@@ -84,9 +96,7 @@ function Modal({
         {/* Header */}
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
-            {title && (
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
-            )}
+            {title && <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}

@@ -78,9 +78,7 @@ function DashboardPage(): React.JSX.Element {
       <Card variant="gradient" padding="lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-1">
-              Welcome to SmartWiFi AI
-            </h1>
+            <h1 className="text-2xl font-bold text-white mb-1">Welcome to SmartWiFi AI</h1>
             <p className="text-primary-100 text-sm max-w-lg">
               Your intelligent network health assistant. Monitor, analyze, and optimize your Wi-Fi
               connection with AI-powered insights.
@@ -203,10 +201,26 @@ function DashboardPage(): React.JSX.Element {
         />
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <QuickAction icon={<Gauge size={20} />} label="Speed Test" description="Test your connection" />
-            <QuickAction icon={<Activity size={20} />} label="Ping Test" description="Check latency" />
-            <QuickAction icon={<Signal size={20} />} label="Signal Scan" description="Analyze Wi-Fi signal" />
-            <QuickAction icon={<Shield size={20} />} label="Security Check" description="Review security" />
+            <QuickAction
+              icon={<Gauge size={20} />}
+              label="Speed Test"
+              description="Test your connection"
+            />
+            <QuickAction
+              icon={<Activity size={20} />}
+              label="Ping Test"
+              description="Check latency"
+            />
+            <QuickAction
+              icon={<Signal size={20} />}
+              label="Signal Scan"
+              description="Analyze Wi-Fi signal"
+            />
+            <QuickAction
+              icon={<Shield size={20} />}
+              label="Security Check"
+              description="Review security"
+            />
           </div>
         </CardContent>
       </Card>
@@ -216,7 +230,16 @@ function DashboardPage(): React.JSX.Element {
 
 function HeartPulseIcon(): React.JSX.Element {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
       <path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
     </svg>
@@ -242,7 +265,7 @@ function HealthMetric({ label, value, maxLabel }: HealthMetricProps): React.JSX.
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm font-medium text-[var(--text-primary)]">{label}</span>
         <span className="text-sm font-semibold text-[var(--text-primary)]">
-          {value > 0 ? `${value}%` : (maxLabel || '—')}
+          {value > 0 ? `${value}%` : maxLabel || '—'}
         </span>
       </div>
       <ProgressBar value={value} variant={value > 0 ? getVariant() : 'primary'} size="sm" />
