@@ -76,21 +76,25 @@ smartwifi-ai/
 ## 🔧 Developer Getting Started
 
 ### 📋 Prerequisites
+
 - [Node.js](https://nodejs.org/) v20.11+
 - [Git](https://git-scm.com/)
 
 ### 🚀 Setup Steps
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Start the development server**
+
    ```bash
    npm run dev
    ```
-   *This starts the Vite renderer server and opens the Electron desktop window in debug mode with hot reloading (HMR) enabled.*
+
+   _This starts the Vite renderer server and opens the Electron desktop window in debug mode with hot reloading (HMR) enabled._
 
 3. **Format & Lint checks**
    ```bash
