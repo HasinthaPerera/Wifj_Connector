@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: smartwifi-ai
+appId: com.smartwifi.ai
+productName: SmartWiFi AI
 directories:
   buildResources: build
 files:
@@ -34,7 +34,7 @@ linux:
     - snap
     - deb
   maintainer: electronjs.org
-  category: Utility
+  category: Network
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
