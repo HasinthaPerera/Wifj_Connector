@@ -18,3 +18,6 @@ export type { TooltipProps } from './Tooltip'
 
 export { TopBar } from './TopBar'
 export type { TopBarProps } from './TopBar'
+
+export { StatCard } from './StatCard'
+export type { StatCardProps } from './StatCard'
