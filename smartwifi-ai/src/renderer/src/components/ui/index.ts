@@ -15,3 +15,6 @@ export type { ModalProps } from './Modal'
 
 export { Tooltip } from './Tooltip'
 export type { TooltipProps } from './Tooltip'
+
+export { TopBar } from './TopBar'
+export type { TopBarProps } from './TopBar'

@@ -16,14 +16,10 @@ import {
   FileText,
   Settings,
   Info,
-  Sun,
-  Moon,
   ChevronLeft,
-  ChevronRight,
-  Menu,
-  Bell
+  ChevronRight
 } from 'lucide-react'
-import { useTheme } from '@/context/ThemeContext'
+import { TopBar } from '@/components/ui'
 import type { NavigationSection } from '@/types'
 
 const navigationSections: NavigationSection[] = [
@@ -98,7 +94,6 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 
 function RootLayout(): React.JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const { resolvedTheme, toggleTheme } = useTheme()
   const location = useLocation()
 
   const toggleSidebar = useCallback(() => {
@@ -112,6 +107,17 @@ function RootLayout(): React.JSX.Element {
       }
     }
     return 'Dashboard'
+  }
+
+  const getBreadcrumbs = (): { label: string }[] => {
+    for (const section of navigationSections) {
+      for (const item of section.items) {
+        if (item.path === location.pathname) {
+          return [{ label: section.title }, { label: item.label }]
+        }
+      }
+    }
+    return []
   }
 
   return (
@@ -206,52 +212,15 @@ function RootLayout(): React.JSX.Element {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between h-16 px-6 border-b border-[var(--border-color)] bg-[var(--bg-sidebar)] flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleSidebar}
-              className="
-                lg:hidden p-2 rounded-lg
-                text-[var(--text-secondary)] hover:bg-surface-100 dark:hover:bg-surface-800
-                transition-colors duration-150 cursor-pointer
-              "
-            >
-              <Menu size={18} />
-            </button>
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">{getPageTitle()}</h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <button
-              className="
-                relative p-2 rounded-lg
-                text-[var(--text-secondary)] hover:bg-surface-100 dark:hover:bg-surface-800
-                transition-colors duration-150 cursor-pointer
-              "
-              title="Notifications"
-            >
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger-500 rounded-full" />
-            </button>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="
-                p-2 rounded-lg
-                text-[var(--text-secondary)] hover:bg-surface-100 dark:hover:bg-surface-800
-                transition-colors duration-150 cursor-pointer
-              "
-              title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              {resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-        </header>
+        {/* Top Navigation Bar */}
+        <TopBar
+          pageTitle={getPageTitle()}
+          breadcrumbs={getBreadcrumbs()}
+          onToggleSidebar={toggleSidebar}
+          sidebarCollapsed={sidebarCollapsed}
+          isConnected
+          signalStrength={78}
+        />
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">
