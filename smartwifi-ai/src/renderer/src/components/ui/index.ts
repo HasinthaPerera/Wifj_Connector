@@ -21,3 +21,6 @@ export type { TopBarProps } from './TopBar'
 
 export { StatCard } from './StatCard'
 export type { StatCardProps } from './StatCard'
+
+export { ThemeManagerPanel, ThemeManagerDropdown } from './ThemeManager'
+export type { ThemeManagerPanelProps, ThemeManagerDropdownProps } from './ThemeManager'

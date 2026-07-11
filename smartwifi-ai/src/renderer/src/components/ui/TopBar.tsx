@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   RefreshCw
 } from 'lucide-react'
+
 import { useTheme } from '@/context/ThemeContext'
+import { ThemeManagerDropdown } from '@/components/ui/ThemeManager'
 import type { AppNotification } from '@/types'
 
 /* ─────────────────────────────────────────────────────────────
@@ -338,11 +340,14 @@ function TopBar({
   isConnected = true,
   signalStrength = 80
 }: TopBarProps): React.JSX.Element {
-  const { resolvedTheme, toggleTheme } = useTheme()
+  const { resolvedTheme } = useTheme()
+
   const [notifOpen, setNotifOpen] = useState(false)
+  const [themeOpen, setThemeOpen] = useState(false)
   const [notifications, setNotifications] = useState<AppNotification[]>(DEMO_NOTIFICATIONS)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
+  const themeRef = useRef<HTMLDivElement>(null)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -541,22 +546,29 @@ function TopBar({
           )}
         </div>
 
-        {/* Theme toggle */}
-        <button
-          id="topbar-theme-toggle"
-          onClick={toggleTheme}
-          className="
-            p-2 rounded-lg
-            text-[var(--text-secondary)]
-            hover:bg-surface-100 dark:hover:bg-surface-800
-            active:scale-95
-            transition-all duration-150 cursor-pointer
-          "
-          aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        {/* Theme toggle / manager */}
+        <div className="relative" ref={themeRef}>
+          <button
+            id="topbar-theme-toggle"
+            onClick={() => setThemeOpen((prev) => !prev)}
+            className={`
+              p-2 rounded-lg
+              text-[var(--text-secondary)]
+              hover:bg-surface-100 dark:hover:bg-surface-800
+              active:scale-95
+              transition-all duration-150 cursor-pointer
+              ${themeOpen ? 'bg-surface-100 dark:bg-surface-800 text-primary-500' : ''}
+            `.trim()}
+            aria-label="Open theme manager"
+            aria-expanded={themeOpen}
+            aria-haspopup="dialog"
+            title="Theme manager"
+          >
+            {resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          <ThemeManagerDropdown isOpen={themeOpen} onClose={() => setThemeOpen(false)} />
+        </div>
       </div>
     </header>
   )
