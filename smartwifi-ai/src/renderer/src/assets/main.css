@@ -96,6 +96,114 @@
   --animate-shimmer: shimmer 2s linear infinite;
 }
 
+/* ---------- Accent Color Palettes ------------------------- */
+/*
+  Each accent palette overrides the primary-* design tokens via the
+  [data-accent] attribute set on <html> by ThemeContext.
+  All components that reference primary-* colours automatically
+  reflect the active accent without any component-level changes.
+*/
+
+/* Indigo (default) — already defined in @theme above, no override needed */
+
+[data-accent='violet'] {
+  --color-primary-50:  #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c4b5fd;
+  --color-primary-400: #a78bfa;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #7c3aed;
+  --color-primary-700: #6d28d9;
+  --color-primary-800: #5b21b6;
+  --color-primary-900: #4c1d95;
+  --color-primary-950: #2e1065;
+}
+
+[data-accent='sky'] {
+  --color-primary-50:  #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+  --color-primary-950: #082f49;
+}
+
+[data-accent='emerald'] {
+  --color-primary-50:  #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+  --color-primary-800: #065f46;
+  --color-primary-900: #064e3b;
+  --color-primary-950: #022c22;
+}
+
+[data-accent='rose'] {
+  --color-primary-50:  #fff1f2;
+  --color-primary-100: #ffe4e6;
+  --color-primary-200: #fecdd3;
+  --color-primary-300: #fda4af;
+  --color-primary-400: #fb7185;
+  --color-primary-500: #f43f5e;
+  --color-primary-600: #e11d48;
+  --color-primary-700: #be123c;
+  --color-primary-800: #9f1239;
+  --color-primary-900: #881337;
+  --color-primary-950: #4c0519;
+}
+
+[data-accent='amber'] {
+  --color-primary-50:  #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+  --color-primary-950: #451a03;
+}
+
+[data-accent='cyan'] {
+  --color-primary-50:  #ecfeff;
+  --color-primary-100: #cffafe;
+  --color-primary-200: #a5f3fc;
+  --color-primary-300: #67e8f9;
+  --color-primary-400: #22d3ee;
+  --color-primary-500: #06b6d4;
+  --color-primary-600: #0891b2;
+  --color-primary-700: #0e7490;
+  --color-primary-800: #155e75;
+  --color-primary-900: #164e63;
+  --color-primary-950: #083344;
+}
+
+[data-accent='fuchsia'] {
+  --color-primary-50:  #fdf4ff;
+  --color-primary-100: #fae8ff;
+  --color-primary-200: #f5d0fe;
+  --color-primary-300: #f0abfc;
+  --color-primary-400: #e879f9;
+  --color-primary-500: #d946ef;
+  --color-primary-600: #c026d3;
+  --color-primary-700: #a21caf;
+  --color-primary-800: #86198f;
+  --color-primary-900: #701a75;
+  --color-primary-950: #4a044e;
+}
+
 /* ---------- Keyframes ------------------------------------- */
 @keyframes fade-in {
   from {

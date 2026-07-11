@@ -1,6 +1,31 @@
 /** Supported application themes */
 export type Theme = 'light' | 'dark' | 'system'
 
+/** Supported accent color palette identifiers */
+export type AccentColor =
+  'indigo' | 'violet' | 'sky' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'fuchsia'
+
+/** Metadata for a selectable accent color in the theme manager */
+export interface AccentColorDescriptor {
+  id: AccentColor
+  label: string
+  /** Hex value used only for the swatch preview; actual styling uses CSS vars */
+  hex: string
+  darkHex: string
+}
+
+/** Full accent color palette used across the theme system */
+export const ACCENT_COLORS: AccentColorDescriptor[] = [
+  { id: 'indigo', label: 'Indigo', hex: '#6366f1', darkHex: '#818cf8' },
+  { id: 'violet', label: 'Violet', hex: '#7c3aed', darkHex: '#a78bfa' },
+  { id: 'sky', label: 'Sky', hex: '#0ea5e9', darkHex: '#38bdf8' },
+  { id: 'emerald', label: 'Emerald', hex: '#10b981', darkHex: '#34d399' },
+  { id: 'rose', label: 'Rose', hex: '#f43f5e', darkHex: '#fb7185' },
+  { id: 'amber', label: 'Amber', hex: '#f59e0b', darkHex: '#fbbf24' },
+  { id: 'cyan', label: 'Cyan', hex: '#06b6d4', darkHex: '#22d3ee' },
+  { id: 'fuchsia', label: 'Fuchsia', hex: '#d946ef', darkHex: '#e879f9' }
+]
+
 /** Navigation item used in sidebar */
 export interface NavigationItem {
   id: string
