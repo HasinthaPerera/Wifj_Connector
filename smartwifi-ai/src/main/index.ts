@@ -7,8 +7,9 @@ function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    minWidth: 1024,
-    minHeight: 680,
+    minWidth: 800,
+    minHeight: 600,
+
     show: false,
     autoHideMenuBar: true,
     title: 'SmartWiFi AI',

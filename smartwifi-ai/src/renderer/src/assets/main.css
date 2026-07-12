@@ -352,4 +352,28 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* ── Responsive layout helpers ── */
+
+  /**
+   * Hide scrollbar while keeping scroll functionality.
+   * Used on the tablet icon-rail nav to avoid a scrollbar on a 68px panel.
+   */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /**
+   * Touch-optimised tap target.
+   * Ensures nav items meet the WCAG 2.5.8 minimum 24×24 px target size.
+   */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
+
