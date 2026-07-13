@@ -28,3 +28,5 @@ export type { ThemeManagerPanelProps, ThemeManagerDropdownProps } from './ThemeM
 export { PageLoader } from './PageLoader'
 
 export { Skeleton, SkeletonCard, SkeletonTable } from './Skeleton'
+
+export { ErrorBoundary } from './ErrorBoundary'
