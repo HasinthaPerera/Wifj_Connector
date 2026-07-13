@@ -26,3 +26,5 @@ export { ThemeManagerPanel, ThemeManagerDropdown } from './ThemeManager'
 export type { ThemeManagerPanelProps, ThemeManagerDropdownProps } from './ThemeManager'
 
 export { PageLoader } from './PageLoader'
+
+export { Skeleton, SkeletonCard, SkeletonTable } from './Skeleton'
