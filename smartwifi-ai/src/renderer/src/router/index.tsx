@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
-import { PageLoader } from '@/components/ui'
+import { PageLoader, ErrorBoundary } from '@/components/ui'
 import { NotFoundPage } from '@/pages'
 import { routes } from './routes'
 
@@ -21,7 +21,17 @@ export function AppRoutes(): React.JSX.Element {
         <Route element={<RootLayout />}>
           {routes.map((route) => {
             const Component = route.component
-            return <Route key={route.path} path={route.path} element={<Component />} />
+            return (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={
+                  <ErrorBoundary>
+                    <Component />
+                  </ErrorBoundary>
+                }
+              />
+            )
           })}
           {/* Unmatched Fallback Route */}
           <Route path="*" element={<NotFoundPage />} />
