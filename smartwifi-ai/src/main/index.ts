@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -51,6 +52,14 @@ app.whenReady().then(() => {
 
   // IPC handlers will be registered here as features are added
   ipcMain.on('ping', () => console.log('pong'))
+
+  ipcMain.handle('wifi:detect-adapter', async () => {
+    return await detectActiveWifiAdapter()
+  })
+
+  ipcMain.handle('wifi:scan-networks', async () => {
+    return await scanNearbyNetworks()
+  })
 
   createWindow()
 

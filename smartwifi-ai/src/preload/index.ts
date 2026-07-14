@@ -1,8 +1,11 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
-const api = {}
+const api = {
+  detectAdapter: () => ipcRenderer.invoke('wifi:detect-adapter'),
+  scanNetworks: () => ipcRenderer.invoke('wifi:scan-networks')
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
