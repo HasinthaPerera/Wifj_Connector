@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Wifi, RefreshCw, Signal, Shield, Radio, Check } from 'lucide-react'
+import { useToast } from '@/context'
 import {
   Card,
   CardHeader,
@@ -20,6 +21,7 @@ interface ScannedNetwork {
 }
 
 export function WifiInfoPage(): React.JSX.Element {
+  const { showToast } = useToast()
   const [scanning, setScanning] = useState(false)
   const [hasScanned, setHasScanned] = useState(false)
   const [activeNetwork, setActiveNetwork] = useState<ScannedNetwork | null>(null)
@@ -28,6 +30,13 @@ export function WifiInfoPage(): React.JSX.Element {
   const triggerScan = (): void => {
     setScanning(true)
     setHasScanned(false)
+
+    showToast(
+      'info',
+      'Scanning Airwaves',
+      'Requesting wireless adapter interface scan details...',
+      1500
+    )
 
     // Simulate nearby access point scanning
     setTimeout(() => {
@@ -66,6 +75,11 @@ export function WifiInfoPage(): React.JSX.Element {
       ])
       setScanning(false)
       setHasScanned(true)
+      showToast(
+        'success',
+        'Scan Completed',
+        'Successfully detected 4 wireless access points within range.'
+      )
     }, 2000)
   }
 

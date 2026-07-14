@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Brain, Sparkles, AlertCircle, CheckCircle2, ShieldAlert, Cpu } from 'lucide-react'
+import { useToast } from '@/context'
 import { Card, CardHeader, CardContent, Button, Skeleton } from '@/components/ui'
 
 interface DiagnosticRecommendation {
@@ -11,6 +12,7 @@ interface DiagnosticRecommendation {
 }
 
 export function AiDiagnosisPage(): React.JSX.Element {
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [hasRun, setHasRun] = useState(false)
   const [recommendations, setRecommendations] = useState<DiagnosticRecommendation[]>([])
@@ -19,6 +21,13 @@ export function AiDiagnosisPage(): React.JSX.Element {
   const runAnalysis = (): void => {
     setLoading(true)
     setHasRun(false)
+
+    showToast(
+      'info',
+      'Analyzing Interface',
+      'Evaluating wireless radio metrics & network nodes...',
+      1500
+    )
 
     // Simulate complex AI calculation steps
     setTimeout(() => {
@@ -55,6 +64,11 @@ export function AiDiagnosisPage(): React.JSX.Element {
       })
       setLoading(false)
       setHasRun(true)
+      showToast(
+        'success',
+        'Analysis Complete',
+        'Identified 2 recommendations for signal congestion and DNS resolution.'
+      )
     }, 2500)
   }
 
