@@ -2,14 +2,16 @@ import './assets/main.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ThemeProvider, ToastProvider } from '@/context'
+import { ThemeProvider, ToastProvider, WifiProvider } from '@/context'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
       <ToastProvider>
-        <App />
+        <WifiProvider>
+          <App />
+        </WifiProvider>
       </ToastProvider>
     </ThemeProvider>
   </StrictMode>
