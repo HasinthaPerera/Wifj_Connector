@@ -29,6 +29,24 @@ declare global {
           bssid: string
         }>
       >
+      getNetworkConfig: () => Promise<
+        Array<{
+          name: string
+          description: string
+          macAddress: string
+          ipAddress: string
+          subnetMask: string
+          gateway: string
+          dnsServers: string[]
+          dhcpServer: string
+          leaseObtained: string
+          leaseExpires: string
+          type: 'wifi' | 'ethernet' | 'loopback' | 'other'
+          status: 'connected' | 'disconnected'
+          isDhcpEnabled: boolean
+          isSimulated?: boolean
+        }>
+      >
     }
   }
 }
