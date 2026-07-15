@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
+import { getNetworkConfiguration } from './network'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -59,6 +60,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('wifi:scan-networks', async () => {
     return await scanNearbyNetworks()
+  })
+
+  ipcMain.handle('net:get-config', async () => {
+    return await getNetworkConfiguration()
   })
 
   createWindow()

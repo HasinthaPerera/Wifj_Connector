@@ -4,7 +4,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 // Custom APIs for renderer
 const api = {
   detectAdapter: () => ipcRenderer.invoke('wifi:detect-adapter'),
-  scanNetworks: () => ipcRenderer.invoke('wifi:scan-networks')
+  scanNetworks: () => ipcRenderer.invoke('wifi:scan-networks'),
+  getNetworkConfig: () => ipcRenderer.invoke('net:get-config')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
