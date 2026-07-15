@@ -19,6 +19,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import { Card, CardHeader, CardContent, Badge, ProgressBar, StatCard } from '@/components/ui'
+import { useWifi } from '@/context'
 
 /* ─────────────────────────────────────────────────────────────
    Simulated network state (replaced by Electron IPC later)
@@ -420,6 +421,7 @@ function InfoRow({ label, value }: { label: string; value: string }): React.JSX.
 ───────────────────────────────────────────────────────────── */
 
 function DashboardPage(): React.JSX.Element {
+  const { status } = useWifi()
   const [net, setNet] = useState<NetworkState>(INITIAL_STATE)
   const [pingHistory, setPingHistory] = useState<number[]>(generateInitialPingHistory)
   const [events] = useState<NetworkEvent[]>(INITIAL_EVENTS)
@@ -487,13 +489,13 @@ function DashboardPage(): React.JSX.Element {
             <h1 className="text-xl font-bold text-white mb-1">Network Dashboard</h1>
             <p className="text-primary-100 text-xs max-w-md leading-relaxed">
               Real-time AI-powered monitoring for{' '}
-              <span className="font-semibold text-white">{net.ssid}</span>. Your connection is{' '}
+              <span className="font-semibold text-white">{status.ssid}</span>. Your connection is{' '}
               {net.healthOverall >= 80 ? 'performing excellently' : 'being actively monitored'}.
             </p>
           </div>
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             <Badge variant="accent" dot>
-              {net.isConnected ? 'Live' : 'Offline'}
+              {status.isConnected ? 'Live' : 'Offline'}
             </Badge>
             <span className="text-[10px] text-primary-200 flex items-center gap-1">
               <Clock size={10} />

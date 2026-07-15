@@ -18,7 +18,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 
-import { useTheme } from '@/context/ThemeContext'
+import { useTheme, useWifi } from '@/context'
 import { ThemeManagerDropdown } from '@/components/ui/ThemeManager'
 import type { AppNotification } from '@/types'
 
@@ -336,11 +336,10 @@ function TopBar({
   pageTitle,
   breadcrumbs = [],
   onToggleSidebar,
-  sidebarCollapsed = false,
-  isConnected = true,
-  signalStrength = 80
+  sidebarCollapsed = false
 }: TopBarProps): React.JSX.Element {
   const { resolvedTheme } = useTheme()
+  const { status, refreshStatus } = useWifi()
 
   const [notifOpen, setNotifOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
@@ -386,10 +385,16 @@ function TopBar({
     setTimeout(() => setIsRefreshing(false), 1200)
   }, [])
 
+  const currentSSID = status.ssid || 'Offline'
+  const currentSignal = status.signal || 0
+  const currentConnected = status.isConnected
+
   /* Connection status colour tokens */
-  const statusDotClass = isConnected ? 'bg-accent-500 animate-pulse-soft' : 'bg-danger-500'
-  const statusLabel = isConnected ? 'Connected' : 'Offline'
-  const statusTextClass = isConnected ? 'text-accent-600 dark:text-accent-400' : 'text-danger-500'
+  const statusDotClass = currentConnected ? 'bg-accent-500 animate-pulse-soft' : 'bg-danger-500'
+  const statusLabel = currentConnected ? currentSSID : 'Offline'
+  const statusTextClass = currentConnected
+    ? 'text-accent-600 dark:text-accent-400'
+    : 'text-danger-500'
 
   return (
     <header
@@ -465,25 +470,30 @@ function TopBar({
             px-3 py-1.5 rounded-lg
             bg-surface-50 dark:bg-surface-800/60
             border border-[var(--border-color)]
+            max-w-[200px]
           "
-          title={`${statusLabel} · Signal ${signalStrength}%`}
+          title={`${currentSSID} · Signal ${currentSignal}%`}
         >
-          {isConnected ? (
+          {currentConnected ? (
             <Wifi size={13} className="text-accent-500 flex-shrink-0" />
           ) : (
             <WifiOff size={13} className="text-danger-500 flex-shrink-0" />
           )}
-          <SignalBars strength={signalStrength} isConnected={isConnected} />
-          <div className="flex items-center gap-1.5 border-l border-[var(--border-color)] pl-2 ml-0.5">
+          <SignalBars strength={currentSignal} isConnected={currentConnected} />
+          <div className="flex items-center gap-1.5 border-l border-[var(--border-color)] pl-2 ml-0.5 min-w-0">
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotClass}`} />
-            <span className={`text-[11px] font-semibold ${statusTextClass}`}>{statusLabel}</span>
+            <span className={`text-[11px] font-semibold truncate ${statusTextClass}`}>
+              {statusLabel}
+            </span>
           </div>
         </div>
 
-        {/* Refresh button */}
         <button
           id="topbar-refresh"
-          onClick={handleRefresh}
+          onClick={async () => {
+            handleRefresh()
+            await refreshStatus()
+          }}
           className="
             p-2 rounded-lg
             text-[var(--text-secondary)]
