@@ -5,7 +5,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   detectAdapter: () => ipcRenderer.invoke('wifi:detect-adapter'),
   scanNetworks: () => ipcRenderer.invoke('wifi:scan-networks'),
-  getNetworkConfig: () => ipcRenderer.invoke('net:get-config')
+  getNetworkConfig: () => ipcRenderer.invoke('net:get-config'),
+  getPublicIp: () => ipcRenderer.invoke('net:get-public-ip')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

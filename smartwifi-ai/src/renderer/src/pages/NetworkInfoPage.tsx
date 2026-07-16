@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { RefreshCw, Cpu, Globe, Server, CheckCircle2, XCircle } from 'lucide-react'
+import { RefreshCw, Cpu, Globe, Server, CheckCircle2, XCircle, MapPin, Network } from 'lucide-react'
 import {
   Card,
   CardHeader,
@@ -28,6 +28,14 @@ interface NetworkInterface {
   isSimulated?: boolean
 }
 
+interface PublicIp {
+  ip: string
+  isp: string
+  location: string
+  countryCode: string
+  isSimulated?: boolean
+}
+
 /**
  * NetworkInfoPage — Interacts directly with Windows ipconfig configurations via Electron IPC.
  * Automatically loads active IP properties, DNS namespaces, and lists all host adapter states.
@@ -37,6 +45,7 @@ export function NetworkInfoPage(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [interfaces, setInterfaces] = useState<NetworkInterface[]>([])
+  const [publicIp, setPublicIp] = useState<PublicIp | null>(null)
 
   const loadNetworkConfig = useCallback(
     async (isRefresh = false): Promise<void> => {
@@ -53,13 +62,19 @@ export function NetworkInfoPage(): React.JSX.Element {
       }
 
       try {
-        const data = await window.api.getNetworkConfig()
-        setInterfaces(data)
+        // Run local network interfaces check
+        const localData = await window.api.getNetworkConfig()
+        setInterfaces(localData)
+
+        // Run public geo-ip lookup check
+        const publicData = await window.api.getPublicIp()
+        setPublicIp(publicData)
+
         if (isRefresh) {
           showToast(
             'success',
             'Interfaces Synchronized',
-            `Discovered ${data.length} active hardware adapter controllers.`
+            `Discovered ${localData.length} active hardware adapter controllers.`
           )
         }
       } catch (err) {
@@ -78,12 +93,14 @@ export function NetworkInfoPage(): React.JSX.Element {
     let active = true
     const detect = async (): Promise<void> => {
       try {
-        const data = await window.api.getNetworkConfig()
+        const localData = await window.api.getNetworkConfig()
+        const publicData = await window.api.getPublicIp()
         if (active) {
-          setInterfaces(data)
+          setInterfaces(localData)
+          setPublicIp(publicData)
         }
       } catch (err) {
-        console.error('Failed to load local network configurations:', err)
+        console.error('Failed to load local network configurations on mount:', err)
         if (active) {
           showToast('error', 'Query Failed', 'Unable to retrieve interface IP details.')
         }
@@ -127,7 +144,7 @@ export function NetworkInfoPage(): React.JSX.Element {
       </div>
 
       {/* Grid Properties */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Interface Card */}
         <Card>
           <CardHeader title="Active Interface Card" icon={<Cpu size={16} />} />
@@ -158,7 +175,7 @@ export function NetworkInfoPage(): React.JSX.Element {
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[var(--text-muted)] font-medium">IP Address</span>
+                  <span className="text-[var(--text-muted)] font-medium">Local IPv4 Address</span>
                   <span className="font-mono font-semibold text-[var(--text-primary)]">
                     {activeInterface.ipAddress || '—'}
                   </span>
@@ -225,6 +242,63 @@ export function NetworkInfoPage(): React.JSX.Element {
                   <span className="text-[var(--text-muted)] font-medium">DHCP Mode</span>
                   <Badge variant={activeInterface.isDhcpEnabled ? 'accent' : 'default'} size="sm">
                     {activeInterface.isDhcpEnabled ? 'Dynamic IP' : 'Static IP'}
+                  </Badge>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Public IP & Geo Location Card */}
+        <Card>
+          <CardHeader title="Public IP &amp; Geolocation" icon={<Network size={16} />} />
+          <CardContent className="space-y-4">
+            {loading ? (
+              <div className="space-y-3 py-1">
+                <Skeleton variant="text" width="100%" height="0.875rem" />
+                <Skeleton variant="text" width="100%" height="0.875rem" />
+                <Skeleton variant="text" width="100%" height="0.875rem" />
+                <Skeleton variant="text" width="100%" height="0.875rem" />
+              </div>
+            ) : !publicIp ? (
+              <div className="text-xs text-[var(--text-muted)] py-4 text-center">
+                Offline or public query failed
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[var(--text-muted)] font-medium">Public IP Address</span>
+                  <Badge variant={publicIp.isSimulated ? 'warning' : 'accent'} size="md">
+                    {publicIp.ip}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-start text-xs gap-3">
+                  <span className="text-[var(--text-muted)] font-medium flex-shrink-0">
+                    ISP Provider
+                  </span>
+                  <span className="font-semibold text-[var(--text-primary)] text-right leading-tight max-w-[70%]">
+                    {publicIp.isp}
+                  </span>
+                </div>
+                <div className="flex justify-between items-start text-xs gap-3">
+                  <span className="text-[var(--text-muted)] font-medium flex-shrink-0 flex items-center gap-1">
+                    <MapPin size={12} className="text-[var(--text-muted)]" />
+                    Geo Location
+                  </span>
+                  <span className="font-semibold text-[var(--text-primary)] text-right leading-tight max-w-[70%]">
+                    {publicIp.location || '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[var(--text-muted)] font-medium">Country Code</span>
+                  <span className="font-bold text-[var(--text-primary)] font-mono">
+                    {publicIp.countryCode}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[var(--text-muted)] font-medium">Connection Integrity</span>
+                  <Badge variant={publicIp.isSimulated ? 'default' : 'primary'} size="sm">
+                    {publicIp.isSimulated ? 'Offline Loop' : 'Public Active'}
                   </Badge>
                 </div>
               </>

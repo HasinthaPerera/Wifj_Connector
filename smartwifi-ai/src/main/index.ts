@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
-import { getNetworkConfiguration } from './network'
+import { getNetworkConfiguration, getPublicIpDetails } from './network'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -64,6 +64,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('net:get-config', async () => {
     return await getNetworkConfiguration()
+  })
+
+  ipcMain.handle('net:get-public-ip', async () => {
+    return await getPublicIpDetails()
   })
 
   createWindow()
