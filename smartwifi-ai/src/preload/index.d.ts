@@ -47,6 +47,13 @@ declare global {
           isSimulated?: boolean
         }>
       >
+      getPublicIp: () => Promise<{
+        ip: string
+        isp: string
+        location: string
+        countryCode: string
+        isSimulated?: boolean
+      }>
     }
   }
 }

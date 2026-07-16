@@ -174,3 +174,52 @@ export async function getNetworkConfiguration(): Promise<NetworkInterfaceDetails
     }
   ]
 }
+
+export interface PublicIpDetails {
+  ip: string
+  isp: string
+  location: string
+  countryCode: string
+  isSimulated?: boolean
+}
+
+/**
+ * Queries public geo-ip info from ipapi services.
+ * Yields high-quality simulated mock public ip details if lookup fails or goes offline.
+ */
+export async function getPublicIpDetails(): Promise<PublicIpDetails> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 3500)
+
+  try {
+    const res = await fetch('https://ipapi.co/json/', { signal: controller.signal })
+    clearTimeout(timeoutId)
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.ip) {
+        return {
+          ip: data.ip,
+          isp: data.org || 'Unknown Provider',
+          location: `${data.city || ''}, ${data.region || ''}, ${data.country_name || ''}`
+            .trim()
+            .replace(/^,\s*|,\s*$/g, ''),
+          countryCode: data.country_code || 'US',
+          isSimulated: false
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Public IP lookup failed, using simulated fallback:', error)
+  } finally {
+    clearTimeout(timeoutId)
+  }
+
+  // Fallback high-quality mock IP details
+  return {
+    ip: '73.142.8.210',
+    isp: 'Comcast Cable Communications, LLC',
+    location: 'San Jose, California, United States',
+    countryCode: 'US',
+    isSimulated: true
+  }
+}
