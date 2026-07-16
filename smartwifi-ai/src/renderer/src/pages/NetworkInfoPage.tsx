@@ -10,6 +10,7 @@ import {
   SkeletonTable
 } from '@/components/ui'
 import { useToast } from '@/context'
+import { getMacManufacturer } from '@/utils'
 
 interface NetworkInterface {
   name: string
@@ -379,7 +380,12 @@ export function NetworkInfoPage(): React.JSX.Element {
                       </td>
                       <td className="py-3 font-mono font-medium">{intf.ipAddress || '—'}</td>
                       <td className="py-3 font-mono text-[var(--text-secondary)]">
-                        {intf.macAddress}
+                        <div>{intf.macAddress}</div>
+                        {intf.macAddress && (
+                          <div className="text-[10px] opacity-60 font-sans">
+                            {getMacManufacturer(intf.macAddress)}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

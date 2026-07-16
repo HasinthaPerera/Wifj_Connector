@@ -10,6 +10,7 @@ import {
   SkeletonTable
 } from '@/components/ui'
 import { useToast } from '@/context'
+import { getMacManufacturer } from '@/utils'
 
 interface ScannedNetwork {
   ssid: string
@@ -271,8 +272,11 @@ export function WifiInfoPage(): React.JSX.Element {
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-[var(--text-muted)] font-medium">BSSID (MAC)</span>
-                  <span className="font-mono font-semibold text-[var(--text-primary)]">
-                    {adapterDetails.bssid}
+                  <span className="font-mono font-semibold text-[var(--text-primary)] text-right">
+                    <div>{adapterDetails.bssid}</div>
+                    <div className="text-[10px] opacity-60 font-sans font-normal">
+                      {getMacManufacturer(adapterDetails.bssid)}
+                    </div>
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
@@ -303,7 +307,10 @@ export function WifiInfoPage(): React.JSX.Element {
                 Physical Adapter MAC
               </span>
               <span className="font-mono font-semibold text-[var(--text-primary)]">
-                {adapterDetails.physicalAddress}
+                <div>{adapterDetails.physicalAddress}</div>
+                <div className="text-[10px] opacity-60 font-sans font-normal">
+                  {getMacManufacturer(adapterDetails.physicalAddress)}
+                </div>
               </span>
             </div>
             <div className="space-y-1">
@@ -410,7 +417,12 @@ export function WifiInfoPage(): React.JSX.Element {
                           {net.security}
                         </Badge>
                       </td>
-                      <td className="py-3 font-mono text-[var(--text-secondary)]">{net.bssid}</td>
+                      <td className="py-3 font-mono text-[var(--text-secondary)]">
+                        <div>{net.bssid}</div>
+                        <div className="text-[10px] opacity-60 font-sans">
+                          {getMacManufacturer(net.bssid)}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
