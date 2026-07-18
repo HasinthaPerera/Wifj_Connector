@@ -15,6 +15,7 @@ export interface WifiStatus {
 interface WifiContextValue {
   status: WifiStatus
   refreshStatus: () => Promise<void>
+  lastRefreshTime: number
 }
 
 const WifiContext = createContext<WifiContextValue | undefined>(undefined)
@@ -35,6 +36,7 @@ const INITIAL_STATUS: WifiStatus = {
  */
 export function WifiProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [status, setStatus] = useState<WifiStatus>(INITIAL_STATUS)
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(() => Date.now())
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -49,6 +51,7 @@ export function WifiProvider({ children }: { children: React.ReactNode }): React
         isSimulated: details.isSimulated,
         loading: false
       })
+      setLastRefreshTime(Date.now())
     } catch (err) {
       console.error('Global SSID detection query failed:', err)
       setStatus((prev) => ({ ...prev, loading: false, isConnected: false, ssid: 'Unknown' }))
@@ -89,7 +92,11 @@ export function WifiProvider({ children }: { children: React.ReactNode }): React
     }
   }, [])
 
-  return <WifiContext.Provider value={{ status, refreshStatus }}>{children}</WifiContext.Provider>
+  return (
+    <WifiContext.Provider value={{ status, refreshStatus, lastRefreshTime }}>
+      {children}
+    </WifiContext.Provider>
+  )
 }
 
 /**

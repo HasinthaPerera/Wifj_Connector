@@ -9,7 +9,7 @@ import {
   Skeleton,
   SkeletonTable
 } from '@/components/ui'
-import { useToast } from '@/context'
+import { useToast, useWifi } from '@/context'
 import { getMacManufacturer } from '@/utils'
 
 interface ScannedNetwork {
@@ -44,6 +44,7 @@ interface AdapterDetails {
  */
 export function WifiInfoPage(): React.JSX.Element {
   const { showToast } = useToast()
+  const { lastRefreshTime } = useWifi()
   const [scanning, setScanning] = useState(false)
   const [hasScanned, setHasScanned] = useState(false)
   const [loadingAdapter, setLoadingAdapter] = useState(true)
@@ -71,34 +72,13 @@ export function WifiInfoPage(): React.JSX.Element {
   )
 
   // Load active adapter on mount
+  // Initial load on mount and dynamic live status refreshes
   useEffect(() => {
-    let active = true
-    const detect = async (): Promise<void> => {
-      try {
-        const details = await window.api.detectAdapter()
-        if (active) {
-          setAdapterDetails(details)
-        }
-      } catch (err) {
-        console.error('Failed to load active Wi-Fi adapter properties:', err)
-        if (active) {
-          showToast(
-            'error',
-            'Adapter Detection Failed',
-            'Unable to communicate with host wireless service.'
-          )
-        }
-      } finally {
-        if (active) {
-          setLoadingAdapter(false)
-        }
-      }
-    }
-    detect()
-    return () => {
-      active = false
-    }
-  }, [showToast])
+    const timer = setTimeout(() => {
+      loadAdapter(false)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [loadAdapter, lastRefreshTime])
 
   const triggerScan = async (): Promise<void> => {
     setScanning(true)
