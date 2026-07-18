@@ -9,7 +9,7 @@ import {
   Skeleton,
   SkeletonTable
 } from '@/components/ui'
-import { useToast } from '@/context'
+import { useToast, useWifi } from '@/context'
 import { getMacManufacturer } from '@/utils'
 
 interface NetworkInterface {
@@ -43,6 +43,7 @@ interface PublicIp {
  */
 export function NetworkInfoPage(): React.JSX.Element {
   const { showToast } = useToast()
+  const { lastRefreshTime } = useWifi()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [interfaces, setInterfaces] = useState<NetworkInterface[]>([])
@@ -89,33 +90,13 @@ export function NetworkInfoPage(): React.JSX.Element {
     [showToast]
   )
 
-  // Initial load on mount
+  // Initial load on mount and dynamic live status refreshes
   useEffect(() => {
-    let active = true
-    const detect = async (): Promise<void> => {
-      try {
-        const localData = await window.api.getNetworkConfig()
-        const publicData = await window.api.getPublicIp()
-        if (active) {
-          setInterfaces(localData)
-          setPublicIp(publicData)
-        }
-      } catch (err) {
-        console.error('Failed to load local network configurations on mount:', err)
-        if (active) {
-          showToast('error', 'Query Failed', 'Unable to retrieve interface IP details.')
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
-    }
-    detect()
-    return () => {
-      active = false
-    }
-  }, [showToast])
+    const timer = setTimeout(() => {
+      loadNetworkConfig(false)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [loadNetworkConfig, lastRefreshTime])
 
   // Active Interface = First connected interface, otherwise fallback to first element
   const activeInterface =
