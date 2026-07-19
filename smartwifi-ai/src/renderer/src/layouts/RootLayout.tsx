@@ -16,6 +16,7 @@ import {
   FileText,
   Settings,
   Info,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
   X
@@ -48,6 +49,12 @@ const navigationSections: NavigationSection[] = [
     title: 'Monitoring',
     items: [
       { id: 'ping-monitor', label: 'Ping Monitor', icon: 'Activity', path: '/ping-monitor' },
+      {
+        id: 'jitter-monitor',
+        label: 'Jitter Monitor',
+        icon: 'TrendingUp',
+        path: '/jitter-monitor'
+      },
       { id: 'packet-loss', label: 'Packet Loss', icon: 'AlertTriangle', path: '/packet-loss' },
       {
         id: 'signal-strength',
@@ -100,7 +107,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   History,
   FileText,
   Settings,
-  Info
+  Info,
+  TrendingUp
 }
 
 /* ─────────────────────────────────────────────────────────────
