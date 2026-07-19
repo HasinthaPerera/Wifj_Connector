@@ -39,6 +39,11 @@ export const routes: RouteConfig[] = [
     label: 'Ping Monitor'
   },
   {
+    path: '/jitter-monitor',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.JitterMonitorPage }))),
+    label: 'Jitter Monitor'
+  },
+  {
     path: '/packet-loss',
     component: lazy(() => import('../pages').then((m) => ({ default: m.PacketLossPage }))),
     label: 'Packet Loss'
