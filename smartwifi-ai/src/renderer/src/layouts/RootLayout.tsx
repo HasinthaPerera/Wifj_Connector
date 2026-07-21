@@ -17,6 +17,7 @@ import {
   Settings,
   Info,
   TrendingUp,
+  Timer,
   ChevronLeft,
   ChevronRight,
   X
@@ -62,7 +63,8 @@ const navigationSections: NavigationSection[] = [
         icon: 'Signal',
         path: '/signal-strength'
       },
-      { id: 'bandwidth', label: 'Bandwidth', icon: 'BarChart3', path: '/bandwidth' }
+      { id: 'bandwidth', label: 'Bandwidth', icon: 'BarChart3', path: '/bandwidth' },
+      { id: 'latency-charts', label: 'Latency Charts', icon: 'Timer', path: '/latency-charts' }
     ]
   },
   {
@@ -108,7 +110,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   FileText,
   Settings,
   Info,
-  TrendingUp
+  TrendingUp,
+  Timer
 }
 
 /* ─────────────────────────────────────────────────────────────

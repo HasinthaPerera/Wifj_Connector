@@ -59,6 +59,11 @@ export const routes: RouteConfig[] = [
     label: 'Bandwidth'
   },
   {
+    path: '/latency-charts',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.LatencyChartsPage }))),
+    label: 'Latency Charts'
+  },
+  {
     path: '/health-score',
     component: lazy(() => import('../pages').then((m) => ({ default: m.HealthScorePage }))),
     label: 'Health Score'
