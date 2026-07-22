@@ -1,13 +1,7 @@
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
 import { useToast } from '@/context'
-
-/* ─────────────────────────────────────────────────────────────
-   Storage schema — must match SpeedTestPage exactly
-───────────────────────────────────────────────────────────── */
-
-const STORAGE_KEY = 'smartwifi_speed_history'
 
 interface TestResult {
   timestamp: string
@@ -16,27 +10,6 @@ interface TestResult {
   pingMs: number
   jitterMs: number
   server: string
-}
-
-/* ─────────────────────────────────────────────────────────────
-   Storage helpers
-───────────────────────────────────────────────────────────── */
-
-function loadHistory(): TestResult[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as TestResult[]) : []
-  } catch {
-    return []
-  }
-}
-
-function persistHistory(history: TestResult[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
-  } catch {
-    // localStorage quota exceeded — silently ignore
-  }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -183,10 +156,20 @@ type SortDir = 'asc' | 'desc'
 export function HistoryPage(): React.JSX.Element {
   const { showToast } = useToast()
 
-  // Load lazily — re-evaluated on every full render cycle
-  const [history, setHistory] = useState<TestResult[]>(loadHistory)
+  const [history, setHistory] = useState<TestResult[]>([])
   const [sortField, setSortField] = useState<SortField>('timestamp')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  // Load from database on mount
+  React.useEffect(() => {
+    window.api.db
+      .getSpeedTests()
+      .then(setHistory)
+      .catch((err) => {
+        console.error('Failed to load history:', err)
+        showToast('error', 'Database Error', 'Could not load speed test history.')
+      })
+  }, [showToast])
 
   /* ── Aggregate statistics ── */
   const count = history.length
@@ -229,9 +212,16 @@ export function HistoryPage(): React.JSX.Element {
 
   /* ── Clear all ── */
   const clearAll = useCallback(() => {
-    setHistory([])
-    persistHistory([])
-    showToast('info', 'History Cleared', 'All speed test records have been removed.')
+    window.api.db
+      .clearSpeedTests()
+      .then(() => {
+        setHistory([])
+        showToast('info', 'History Cleared', 'All speed test records have been removed.')
+      })
+      .catch((err) => {
+        console.error('Failed to clear history:', err)
+        showToast('error', 'Database Error', 'Could not clear speed test history.')
+      })
   }, [showToast])
 
   /* ── Sort indicator helper ── */

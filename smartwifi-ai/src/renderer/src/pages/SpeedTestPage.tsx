@@ -37,15 +37,14 @@ export function SpeedTestPage(): React.JSX.Element {
   const [finalPing, setFinalPing] = useState<number | null>(null)
   const [finalJitter, setFinalJitter] = useState<number | null>(null)
 
-  const [history, setHistory] = useState<TestResult[]>(() => {
-    const saved = localStorage.getItem('smartwifi_speed_history')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [history, setHistory] = useState<TestResult[]>([])
 
-  // Save history updates
   useEffect(() => {
-    localStorage.setItem('smartwifi_speed_history', JSON.stringify(history))
-  }, [history])
+    window.api.db
+      .getSpeedTests()
+      .then(setHistory)
+      .catch((err) => console.error('Failed to load speed test history:', err))
+  }, [])
 
   const runSpeedTest = useCallback(() => {
     if (isRunning) return
@@ -141,7 +140,16 @@ export function SpeedTestPage(): React.JSX.Element {
           server: 'Cloudflare Edge (SJC)'
         }
 
-        setHistory((prev) => [newResult, ...prev].slice(0, 10))
+        // Save to DB and refresh list
+        window.api.db
+          .insertSpeedTest(newResult)
+          .then(() => window.api.db.getSpeedTests())
+          .then(setHistory)
+          .catch((err) => {
+            console.error('Failed to save speed test to DB:', err)
+            // Fallback to local state update if DB fails
+            setHistory((prev) => [newResult, ...prev].slice(0, 10))
+          })
 
         showToast(
           'success',
@@ -153,8 +161,16 @@ export function SpeedTestPage(): React.JSX.Element {
   }, [isRunning, showToast])
 
   const clearHistory = useCallback(() => {
-    setHistory([])
-    showToast('info', 'History Cleared', 'Speed test metrics database cleared.')
+    window.api.db
+      .clearSpeedTests()
+      .then(() => {
+        setHistory([])
+        showToast('info', 'History Cleared', 'Speed test metrics database cleared.')
+      })
+      .catch((err) => {
+        console.error('Failed to clear history:', err)
+        showToast('error', 'Database Error', 'Could not clear database.')
+      })
   }, [showToast])
 
   return (

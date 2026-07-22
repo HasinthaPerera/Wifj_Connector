@@ -54,6 +54,27 @@ declare global {
         countryCode: string
         isSimulated?: boolean
       }>
+      db: {
+        getSpeedTests: () => Promise<
+          Array<{
+            timestamp: string
+            downloadMbps: number
+            uploadMbps: number
+            pingMs: number
+            jitterMs: number
+            server: string
+          }>
+        >
+        insertSpeedTest: (result: {
+          timestamp: string
+          downloadMbps: number
+          uploadMbps: number
+          pingMs: number
+          jitterMs: number
+          server: string
+        }) => Promise<number>
+        clearSpeedTests: () => Promise<void>
+      }
     }
   }
 }
