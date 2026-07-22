@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
 import { getNetworkConfiguration, getPublicIpDetails } from './network'
+import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests } from './db'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -51,6 +52,9 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  // Initialize SQLite database
+  initDb()
+
   // IPC handlers will be registered here as features are added
   ipcMain.on('ping', () => console.log('pong'))
 
@@ -68,6 +72,19 @@ app.whenReady().then(() => {
 
   ipcMain.handle('net:get-public-ip', async () => {
     return await getPublicIpDetails()
+  })
+
+  // Database handlers
+  ipcMain.handle('db:get-speed-tests', async () => {
+    return await getSpeedTests()
+  })
+
+  ipcMain.handle('db:insert-speed-test', async (_, result) => {
+    return await insertSpeedTest(result)
+  })
+
+  ipcMain.handle('db:clear-speed-tests', async () => {
+    return await clearSpeedTests()
   })
 
   createWindow()

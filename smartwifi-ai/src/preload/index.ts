@@ -6,7 +6,12 @@ const api = {
   detectAdapter: () => ipcRenderer.invoke('wifi:detect-adapter'),
   scanNetworks: () => ipcRenderer.invoke('wifi:scan-networks'),
   getNetworkConfig: () => ipcRenderer.invoke('net:get-config'),
-  getPublicIp: () => ipcRenderer.invoke('net:get-public-ip')
+  getPublicIp: () => ipcRenderer.invoke('net:get-public-ip'),
+  db: {
+    getSpeedTests: () => ipcRenderer.invoke('db:get-speed-tests'),
+    insertSpeedTest: (result: Record<string, unknown>) => ipcRenderer.invoke('db:insert-speed-test', result),
+    clearSpeedTests: () => ipcRenderer.invoke('db:clear-speed-tests')
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
