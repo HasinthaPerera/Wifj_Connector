@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp } from 'lucide-react'
+import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp, Search } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
 import { useToast } from '@/context'
 
@@ -160,6 +160,7 @@ export function HistoryPage(): React.JSX.Element {
   const [history, setHistory] = useState<TestResult[]>([])
   const [sortField, setSortField] = useState<SortField>('timestamp')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Load from database on mount
   React.useEffect(() => {
@@ -203,7 +204,18 @@ export function HistoryPage(): React.JSX.Element {
     [sortField]
   )
 
-  const sorted = [...history].sort((a, b) => {
+  const filteredHistory = history.filter(item => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    return (
+      item.server.toLowerCase().includes(q) ||
+      item.timestamp.toLowerCase().includes(q) ||
+      item.downloadMbps.toString().includes(q) ||
+      item.uploadMbps.toString().includes(q)
+    )
+  })
+
+  const sorted = [...filteredHistory].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1
     if (sortField === 'timestamp') {
       return a.timestamp.localeCompare(b.timestamp) * dir
@@ -424,8 +436,20 @@ export function HistoryPage(): React.JSX.Element {
           <Card>
             <CardHeader
               title="Test Run Log"
-              subtitle={`${count} recorded test${count !== 1 ? 's' : ''} — click column headers to sort`}
+              subtitle={`${filteredHistory.length} of ${count} recorded test${count !== 1 ? 's' : ''} shown`}
               icon={<History size={16} />}
+              action={
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search history..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs bg-[var(--surface-input)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-[var(--text-primary)] w-full sm:w-48 transition-all"
+                  />
+                </div>
+              }
             />
             <CardContent>
               <div className="overflow-x-auto max-h-80 overflow-y-auto">
@@ -486,45 +510,55 @@ export function HistoryPage(): React.JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {sorted.map((item, idx) => {
-                      const overall = scoreResult(item)
-                      return (
-                        <tr
-                          key={idx}
-                          className="border-b border-[var(--border-color)]/40 last:border-0 hover:bg-surface-50/50 dark:hover:bg-surface-800/30 transition-colors"
-                        >
-                          <td className="py-2.5 pr-4 font-mono text-[var(--text-muted)]">
-                            {item.timestamp}
-                          </td>
-                          <td className="py-2.5 pr-4 font-mono font-bold text-primary-500">
-                            {item.downloadMbps} Mbps
-                          </td>
-                          <td className="py-2.5 pr-4 font-mono font-bold text-accent-500">
-                            {item.uploadMbps} Mbps
-                          </td>
-                          <td className="py-2.5 pr-4 font-mono text-[var(--text-secondary)]">
-                            {item.pingMs} ms / {item.jitterMs} ms
-                          </td>
-                          <td className="py-2.5 pr-4 text-[var(--text-secondary)] max-w-[140px] truncate">
-                            {item.server}
-                          </td>
-                          <td className="py-2.5">
-                            <Badge variant={gradeVariant(overall)} size="sm">
-                              {overall}
-                            </Badge>
-                          </td>
-                          <td className="py-2.5 text-right">
-                            <button
-                              onClick={() => deleteRecord(item.id)}
-                              className="text-[var(--text-muted)] hover:text-danger-500 transition-colors p-1"
-                              title="Delete record"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
+                    {sorted.length === 0 ? (
+                      <tr className="border-b border-[var(--border-color)] text-[var(--text-primary)]">
+                        <td className="py-4" colSpan={7}>
+                          <div className="text-center text-[var(--text-muted)] py-2">
+                            No records match your search.
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      sorted.map((item, idx) => {
+                        const overall = scoreResult(item)
+                        return (
+                          <tr
+                            key={item.id || idx}
+                            className="border-b border-[var(--border-color)]/40 last:border-0 hover:bg-surface-50/50 dark:hover:bg-surface-800/30 transition-colors"
+                          >
+                            <td className="py-2.5 pr-4 font-mono text-[var(--text-muted)]">
+                              {item.timestamp}
+                            </td>
+                            <td className="py-2.5 pr-4 font-mono font-bold text-primary-500">
+                              {item.downloadMbps} Mbps
+                            </td>
+                            <td className="py-2.5 pr-4 font-mono font-bold text-accent-500">
+                              {item.uploadMbps} Mbps
+                            </td>
+                            <td className="py-2.5 pr-4 font-mono text-[var(--text-secondary)]">
+                              {item.pingMs} ms / {item.jitterMs} ms
+                            </td>
+                            <td className="py-2.5 pr-4 text-[var(--text-secondary)] max-w-[140px] truncate">
+                              {item.server}
+                            </td>
+                            <td className="py-2.5">
+                              <Badge variant={gradeVariant(overall)} size="sm">
+                                {overall}
+                              </Badge>
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <button
+                                onClick={() => deleteRecord(item.id)}
+                                className="text-[var(--text-muted)] hover:text-danger-500 transition-colors p-1"
+                                title="Delete record"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
