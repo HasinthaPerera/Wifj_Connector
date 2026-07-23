@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
 import { getNetworkConfiguration, getPublicIpDetails } from './network'
-import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests } from './db'
+import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests, deleteSpeedTest } from './db'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -85,6 +85,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('db:clear-speed-tests', async () => {
     return await clearSpeedTests()
+  })
+
+  ipcMain.handle('db:delete-speed-test', async (_, id: number) => {
+    return await deleteSpeedTest(id)
   })
 
   createWindow()

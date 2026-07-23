@@ -7,6 +7,7 @@ const dbPath = join(app.getPath('userData'), 'smartwifi.db')
 let db: sqlite3.Database
 
 export interface SpeedTestResult {
+  id?: number
   timestamp: string
   downloadMbps: number
   uploadMbps: number
@@ -67,7 +68,7 @@ export function insertSpeedTest(result: SpeedTestResult): Promise<number> {
 export function getSpeedTests(): Promise<SpeedTestResult[]> {
   return new Promise((resolve, reject) => {
     const query =
-      'SELECT timestamp, downloadMbps, uploadMbps, pingMs, jitterMs, server FROM speed_tests ORDER BY timestamp DESC'
+      'SELECT id, timestamp, downloadMbps, uploadMbps, pingMs, jitterMs, server FROM speed_tests ORDER BY timestamp DESC'
     db.all(query, [], (err, rows) => {
       if (err) reject(err)
       else resolve(rows as SpeedTestResult[])
@@ -78,6 +79,15 @@ export function getSpeedTests(): Promise<SpeedTestResult[]> {
 export function clearSpeedTests(): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run('DELETE FROM speed_tests', (err) => {
+      if (err) reject(err)
+      else resolve()
+    })
+  })
+}
+
+export function deleteSpeedTest(id: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM speed_tests WHERE id = ?', [id], (err) => {
       if (err) reject(err)
       else resolve()
     })
