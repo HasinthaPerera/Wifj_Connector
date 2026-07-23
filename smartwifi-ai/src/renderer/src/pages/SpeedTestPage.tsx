@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent, Button, ProgressBar } from '@/components
 import { useToast } from '@/context'
 
 interface TestResult {
+  id?: number
   timestamp: string
   downloadMbps: number
   uploadMbps: number

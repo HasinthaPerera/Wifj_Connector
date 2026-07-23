@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
 import { useToast } from '@/context'
 
 interface TestResult {
+  id: number
   timestamp: string
   downloadMbps: number
   uploadMbps: number
@@ -221,6 +222,20 @@ export function HistoryPage(): React.JSX.Element {
       .catch((err) => {
         console.error('Failed to clear history:', err)
         showToast('error', 'Database Error', 'Could not clear speed test history.')
+      })
+  }, [showToast])
+
+  /* ── Delete single record ── */
+  const deleteRecord = useCallback((id: number) => {
+    window.api.db
+      .deleteSpeedTest(id)
+      .then(() => {
+        setHistory(prev => prev.filter(r => r.id !== id))
+        showToast('success', 'Record Deleted', 'The speed test record was removed.')
+      })
+      .catch((err) => {
+        console.error('Failed to delete record:', err)
+        showToast('error', 'Database Error', 'Could not delete the record.')
       })
   }, [showToast])
 
@@ -466,6 +481,8 @@ export function HistoryPage(): React.JSX.Element {
                       </th>
                       {/* Grade */}
                       <th className="py-2.5 font-semibold">Grade</th>
+                      {/* Actions */}
+                      <th className="py-2.5 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -495,6 +512,15 @@ export function HistoryPage(): React.JSX.Element {
                             <Badge variant={gradeVariant(overall)} size="sm">
                               {overall}
                             </Badge>
+                          </td>
+                          <td className="py-2.5 text-right">
+                            <button
+                              onClick={() => deleteRecord(item.id)}
+                              className="text-[var(--text-muted)] hover:text-danger-500 transition-colors p-1"
+                              title="Delete record"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </td>
                         </tr>
                       )

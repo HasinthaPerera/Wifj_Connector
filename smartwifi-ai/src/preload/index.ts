@@ -10,7 +10,8 @@ const api = {
   db: {
     getSpeedTests: () => ipcRenderer.invoke('db:get-speed-tests'),
     insertSpeedTest: (result: Record<string, unknown>) => ipcRenderer.invoke('db:insert-speed-test', result),
-    clearSpeedTests: () => ipcRenderer.invoke('db:clear-speed-tests')
+    clearSpeedTests: () => ipcRenderer.invoke('db:clear-speed-tests'),
+    deleteSpeedTest: (id: number) => ipcRenderer.invoke('db:delete-speed-test', id)
   }
 }
 

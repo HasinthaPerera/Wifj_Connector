@@ -57,6 +57,7 @@ declare global {
       db: {
         getSpeedTests: () => Promise<
           Array<{
+            id: number
             timestamp: string
             downloadMbps: number
             uploadMbps: number
@@ -74,6 +75,7 @@ declare global {
           server: string
         }) => Promise<number>
         clearSpeedTests: () => Promise<void>
+        deleteSpeedTest: (id: number) => Promise<void>
       }
     }
   }
