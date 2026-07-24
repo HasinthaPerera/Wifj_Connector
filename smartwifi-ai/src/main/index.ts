@@ -1,5 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import * as fs from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
@@ -89,6 +90,22 @@ app.whenReady().then(() => {
 
   ipcMain.handle('db:delete-speed-test', async (_, id: number) => {
     return await deleteSpeedTest(id)
+  })
+
+  ipcMain.handle('app:export-csv', async (_, csvContent: string) => {
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: 'Export Speed Test History',
+      defaultPath: 'smartwifi_history.csv',
+      filters: [{ name: 'CSV Files', extensions: ['csv'] }]
+    })
+    if (canceled || !filePath) return false
+    try {
+      await fs.promises.writeFile(filePath, csvContent, 'utf-8')
+      return true
+    } catch (error) {
+      console.error('Failed to export CSV:', error)
+      throw error
+    }
   })
 
   createWindow()

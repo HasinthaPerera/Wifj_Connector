@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp, Search } from 'lucide-react'
+import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp, Search, Download } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
 import { useToast } from '@/context'
 
@@ -274,6 +274,39 @@ export function HistoryPage(): React.JSX.Element {
       })
   }, [showToast])
 
+  /* ── Export CSV ── */
+  const handleExportCsv = useCallback(() => {
+    if (sorted.length === 0) {
+      showToast('warning', 'Empty Data', 'No records to export.')
+      return
+    }
+
+    const headers = ['Timestamp', 'Download Mbps', 'Upload Mbps', 'Ping ms', 'Jitter ms', 'Server', 'Overall Grade']
+    const rows = sorted.map((r) => [
+      r.timestamp,
+      r.downloadMbps,
+      r.uploadMbps,
+      r.pingMs,
+      r.jitterMs,
+      // Wrap server name in quotes if it contains commas
+      `"${r.server.replace(/"/g, '""')}"`,
+      scoreResult(r)
+    ])
+
+    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
+
+    window.api.exportCsv(csvContent)
+      .then((success) => {
+        if (success) {
+          showToast('success', 'Export Successful', 'Data exported to CSV successfully.')
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to export CSV:', err)
+        showToast('error', 'Export Failed', 'An error occurred while exporting data.')
+      })
+  }, [sorted, showToast])
+
   /* ── Sort indicator helper ── */
   const sortIndicator = (field: SortField): string => {
     if (field !== sortField) return ''
@@ -291,9 +324,14 @@ export function HistoryPage(): React.JSX.Element {
           </p>
         </div>
         {count > 0 && (
-          <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearAll}>
-            Clear All Records
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" leftIcon={<Download size={14} />} onClick={handleExportCsv}>
+              Export CSV
+            </Button>
+            <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearAll}>
+              Clear All
+            </Button>
+          </div>
         )}
       </div>
 
