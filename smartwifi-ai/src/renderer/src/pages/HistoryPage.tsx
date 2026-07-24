@@ -138,11 +138,23 @@ function Sparkline({ values, color, gradientId }: SparklineProps): React.JSX.Ele
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Sort types
+   Sort types & Filters
 ───────────────────────────────────────────────────────────── */
 
 type SortField = 'timestamp' | 'downloadMbps' | 'uploadMbps' | 'pingMs'
 type SortDir = 'asc' | 'desc'
+type GradeFilter = 'all' | SpeedGrade
+
+/* ── Per-result overall score ── */
+const scoreResult = (r: TestResult): SpeedGrade => {
+  const dlG = gradeDownload(r.downloadMbps)
+  const ulG = gradeUpload(r.uploadMbps)
+  const pgG = gradePing(r.pingMs)
+  const grades: SpeedGrade[] = [dlG, ulG, pgG]
+  const order: SpeedGrade[] = ['poor', 'fair', 'good', 'excellent']
+  const minScore = Math.min(...grades.map((g) => order.indexOf(g)))
+  return order[minScore]
+}
 
 /* ─────────────────────────────────────────────────────────────
    HistoryPage
@@ -161,6 +173,7 @@ export function HistoryPage(): React.JSX.Element {
   const [sortField, setSortField] = useState<SortField>('timestamp')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterGrade, setFilterGrade] = useState<GradeFilter>('all')
 
   // Load from database on mount
   React.useEffect(() => {
@@ -204,15 +217,25 @@ export function HistoryPage(): React.JSX.Element {
     [sortField]
   )
 
-  const filteredHistory = history.filter(item => {
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    return (
-      item.server.toLowerCase().includes(q) ||
-      item.timestamp.toLowerCase().includes(q) ||
-      item.downloadMbps.toString().includes(q) ||
-      item.uploadMbps.toString().includes(q)
-    )
+  const filteredHistory = history.filter((item) => {
+    // 1. Text Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      const matchesText =
+        item.server.toLowerCase().includes(q) ||
+        item.timestamp.toLowerCase().includes(q) ||
+        item.downloadMbps.toString().includes(q) ||
+        item.uploadMbps.toString().includes(q)
+      if (!matchesText) return false
+    }
+
+    // 2. Grade Filter
+    if (filterGrade !== 'all') {
+      const overall = scoreResult(item)
+      if (overall !== filterGrade) return false
+    }
+
+    return true
   })
 
   const sorted = [...filteredHistory].sort((a, b) => {
@@ -255,17 +278,6 @@ export function HistoryPage(): React.JSX.Element {
   const sortIndicator = (field: SortField): string => {
     if (field !== sortField) return ''
     return sortDir === 'asc' ? ' ↑' : ' ↓'
-  }
-
-  /* ── Per-result overall score ── */
-  const scoreResult = (r: TestResult): SpeedGrade => {
-    const dlG = gradeDownload(r.downloadMbps)
-    const ulG = gradeUpload(r.uploadMbps)
-    const pgG = gradePing(r.pingMs)
-    const grades: SpeedGrade[] = [dlG, ulG, pgG]
-    const order: SpeedGrade[] = ['poor', 'fair', 'good', 'excellent']
-    const minScore = Math.min(...grades.map((g) => order.indexOf(g)))
-    return order[minScore]
   }
 
   return (
@@ -439,15 +451,31 @@ export function HistoryPage(): React.JSX.Element {
               subtitle={`${filteredHistory.length} of ${count} recorded test${count !== 1 ? 's' : ''} shown`}
               icon={<History size={16} />}
               action={
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
-                  <input
-                    type="text"
-                    placeholder="Search history..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 text-xs bg-[var(--surface-input)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-[var(--text-primary)] w-full sm:w-48 transition-all"
-                  />
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                      size={14}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search history..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 text-xs bg-[var(--surface-input)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-[var(--text-primary)] w-full sm:w-48 transition-all"
+                    />
+                  </div>
+                  <select
+                    value={filterGrade}
+                    onChange={(e) => setFilterGrade(e.target.value as GradeFilter)}
+                    className="py-1.5 pl-3 pr-8 text-xs bg-[var(--surface-input)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-[var(--text-primary)] cursor-pointer"
+                  >
+                    <option value="all">All Grades</option>
+                    <option value="excellent">Excellent</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                  </select>
                 </div>
               }
             />
