@@ -108,6 +108,31 @@ app.whenReady().then(() => {
     }
   })
 
+  ipcMain.handle('app:export-pdf', async (event) => {
+    const webContents = event.sender
+    try {
+      const pdfBuffer = await webContents.printToPDF({
+        printBackground: true,
+        landscape: true,
+        margins: { marginType: 'default' }
+      })
+
+      const { canceled, filePath } = await dialog.showSaveDialog({
+        title: 'Export Speed Test History to PDF',
+        defaultPath: 'smartwifi_history.pdf',
+        filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+      })
+
+      if (canceled || !filePath) return false
+
+      await fs.promises.writeFile(filePath, pdfBuffer)
+      return true
+    } catch (error) {
+      console.error('Failed to export PDF:', error)
+      throw error
+    }
+  })
+
   createWindow()
 
   app.on('activate', function () {

@@ -13,7 +13,8 @@ const api = {
     clearSpeedTests: () => ipcRenderer.invoke('db:clear-speed-tests'),
     deleteSpeedTest: (id: number) => ipcRenderer.invoke('db:delete-speed-test', id)
   },
-  exportCsv: (content: string) => ipcRenderer.invoke('app:export-csv', content)
+  exportCsv: (content: string) => ipcRenderer.invoke('app:export-csv', content),
+  exportPdf: () => ipcRenderer.invoke('app:export-pdf')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
