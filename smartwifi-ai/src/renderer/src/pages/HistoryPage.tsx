@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp, Search, Download } from 'lucide-react'
+import { History, Calendar, ArrowDown, ArrowUp, Activity, Trash2, ArrowDownUp, Search, Download, FileText } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
 import { useToast } from '@/context'
 
@@ -307,6 +307,20 @@ export function HistoryPage(): React.JSX.Element {
       })
   }, [sorted, showToast])
 
+  /* ── Export PDF ── */
+  const handleExportPdf = useCallback(() => {
+    window.api.exportPdf()
+      .then((success) => {
+        if (success) {
+          showToast('success', 'Export Successful', 'Data exported to PDF successfully.')
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to export PDF:', err)
+        showToast('error', 'Export Failed', 'An error occurred while exporting PDF.')
+      })
+  }, [showToast])
+
   /* ── Sort indicator helper ── */
   const sortIndicator = (field: SortField): string => {
     if (field !== sortField) return ''
@@ -325,6 +339,9 @@ export function HistoryPage(): React.JSX.Element {
         </div>
         {count > 0 && (
           <div className="flex gap-2">
+            <Button variant="ghost" size="sm" leftIcon={<FileText size={14} />} onClick={handleExportPdf}>
+              Export PDF
+            </Button>
             <Button variant="ghost" size="sm" leftIcon={<Download size={14} />} onClick={handleExportCsv}>
               Export CSV
             </Button>

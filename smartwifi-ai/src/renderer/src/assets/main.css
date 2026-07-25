@@ -377,3 +377,30 @@
   }
 }
 
+/* ---------- Print Styles ---------------------------------- */
+@media print {
+  /* Hide sidebar, topbar, and export buttons */
+  nav, header, .print-hide, button {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .glass, .dark .glass, .bg-card, .bg-\[var\(--bg-card\)\] {
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+
+  /* Expand main content */
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+}
+

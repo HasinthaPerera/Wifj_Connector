@@ -78,6 +78,7 @@ declare global {
         deleteSpeedTest: (id: number) => Promise<void>
       }
       exportCsv: (content: string) => Promise<boolean>
+      exportPdf: () => Promise<boolean>
     }
   }
 }
