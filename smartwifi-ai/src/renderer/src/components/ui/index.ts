@@ -30,3 +30,19 @@ export { PageLoader } from './PageLoader'
 export { Skeleton, SkeletonCard, SkeletonTable } from './Skeleton'
 
 export { ErrorBoundary } from './ErrorBoundary'
+
+export {
+  StatusPill,
+  SignalBars,
+  QualityDot,
+  ScoreBadge,
+  HealthMeter,
+  HealthIndicatorRow,
+  ConnectionQualityCard,
+  scoreToVariant,
+  scoreToGrade,
+  gradeToLabel,
+  variantToColor
+} from './HealthIndicators'
+export type { HealthGrade, HealthVariant, ConnectionState, DimensionScore } from './HealthIndicators'
+

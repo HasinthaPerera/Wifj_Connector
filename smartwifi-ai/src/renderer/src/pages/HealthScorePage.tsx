@@ -11,7 +11,10 @@ import {
   XCircle,
   Info
 } from 'lucide-react'
-import { Card, CardHeader, CardContent, Button, Badge, ProgressBar } from '@/components/ui'
+import {
+  Card, CardHeader, CardContent, Button, Badge,
+  HealthMeter, HealthIndicatorRow, SignalBars, StatusPill
+} from '@/components/ui'
 import { useWifi } from '@/context'
 
 /* ─────────────────────────────────────────────────────────────
@@ -99,15 +102,7 @@ function gradeFromScore(score: number): HealthGrade {
   return 'Poor'
 }
 
-function gradeVariant(grade: HealthGrade): 'accent' | 'primary' | 'warning' | 'danger' {
-  switch (grade) {
-    case 'Excellent': return 'accent'
-    case 'Good':      return 'primary'
-    case 'Fair':      return 'warning'
-    case 'Poor':      return 'danger'
-    default:          return 'primary'
-  }
-}
+
 
 function scoreVariant(score: number): 'accent' | 'primary' | 'warning' | 'danger' {
   if (score >= 85) return 'accent'
@@ -116,98 +111,7 @@ function scoreVariant(score: number): 'accent' | 'primary' | 'warning' | 'danger
   return 'danger'
 }
 
-function scoreColor(score: number): string {
-  if (score >= 85) return 'var(--color-accent-500)'
-  if (score >= 65) return 'var(--color-primary-500)'
-  if (score >= 40) return 'var(--color-warning-500)'
-  return 'var(--color-danger-500)'
-}
 
-/* ─────────────────────────────────────────────────────────────
-   Circular gauge SVG
-───────────────────────────────────────────────────────────── */
-
-interface CircularGaugeProps {
-  score: number   // 0-100
-  size?: number
-}
-
-function CircularGauge({ score, size = 180 }: CircularGaugeProps): React.JSX.Element {
-  const R = 72
-  const cx = size / 2
-  const cy = size / 2
-  const strokeWidth = 10
-  const circumference = 2 * Math.PI * R
-  // Only draw 270° arc (start at 135deg, end at 405deg)
-  const arcRatio = 0.75
-  const arcLength = circumference * arcRatio
-  const offset = arcLength - (score / 100) * arcLength
-  const color = scoreColor(score)
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      aria-label={`Health score: ${score} out of 100`}
-      role="img"
-    >
-      {/* Track arc (270°, rotated so gap is at bottom) */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={R}
-        fill="none"
-        stroke="var(--color-surface-200)"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={`${arcLength} ${circumference}`}
-        strokeDashoffset={0}
-        transform={`rotate(135 ${cx} ${cy})`}
-        className="dark:[stroke:var(--color-surface-700)]"
-      />
-      {/* Value arc */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={R}
-        fill="none"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={`${arcLength} ${circumference}`}
-        strokeDashoffset={offset}
-        transform={`rotate(135 ${cx} ${cy})`}
-        style={{ transition: 'stroke-dashoffset 1s ease-out, stroke 0.5s ease' }}
-      />
-      {/* Score text */}
-      <text
-        x={cx}
-        y={cy - 6}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="32"
-        fontWeight="800"
-        fill={color}
-        style={{ transition: 'fill 0.5s ease', fontFamily: 'var(--font-sans)' }}
-      >
-        {score}
-      </text>
-      <text
-        x={cx}
-        y={cy + 22}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="11"
-        fontWeight="500"
-        fill="var(--color-surface-400)"
-        style={{ fontFamily: 'var(--font-sans)' }}
-      >
-        / 100
-      </text>
-    </svg>
-  )
-}
 
 /* ─────────────────────────────────────────────────────────────
    Recommendation Item
@@ -425,17 +329,25 @@ export function HealthScorePage(): React.JSX.Element {
             title="Overall Score"
             subtitle={hasEnoughData ? `Grade: ${grade}` : 'Awaiting data'}
             icon={<HeartPulse size={16} />}
+            action={
+              <StatusPill
+                state={status.isConnected ? 'connected' : 'disconnected'}
+                size="sm"
+              />
+            }
           />
           <CardContent className="flex flex-col items-center justify-center gap-4 py-6 flex-1">
             {hasEnoughData ? (
               <>
-                <CircularGauge score={overallScore} />
-                <Badge
-                  variant={gradeVariant(grade)}
-                  className="text-sm px-4 py-1 font-bold tracking-wide"
-                >
-                  {grade}
-                </Badge>
+                <HealthMeter score={overallScore} size={164} showTicks />
+                {hasSignalData && (
+                  <div className="flex flex-col items-center gap-1.5">
+                    <SignalBars percent={status.signal} size="md" />
+                    <span className="text-[11px] text-[var(--text-muted)]">
+                      Signal {status.signal}%
+                    </span>
+                  </div>
+                )}
                 <p className="text-xs text-[var(--text-muted)] text-center max-w-[160px]">
                   Based on {[hasSignalData && 'signal', hasSpeedData && 'speed test'].filter(Boolean).join(' & ')} data
                 </p>
@@ -454,29 +366,16 @@ export function HealthScorePage(): React.JSX.Element {
           <CardHeader title="Score Breakdown" icon={<CheckCircle2 size={16} />} />
           <CardContent className="space-y-5">
             {subScores.map((sub) => (
-              <div key={sub.label} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[var(--text-muted)]">{sub.icon}</span>
-                    <span className="font-medium text-[var(--text-primary)]">{sub.label}</span>
-                    <span className="text-[var(--text-muted)]">·</span>
-                    <span className="text-[var(--text-muted)]">{sub.description}</span>
-                  </div>
-                  <span
-                    className="font-bold tabular-nums"
-                    style={{ color: hasEnoughData ? scoreColor(sub.score) : undefined }}
-                  >
-                    {hasEnoughData ? sub.score : '—'} / 100
-                  </span>
-                </div>
-                <ProgressBar
-                  value={hasEnoughData ? sub.score : 0}
-                  max={100}
-                  size="sm"
-                  variant={sub.variant}
-                  animated
+              <div key={sub.label} className="space-y-1">
+                <HealthIndicatorRow
+                  label={sub.label}
+                  score={hasEnoughData ? sub.score : 0}
+                  rawValue={sub.description}
+                  icon={sub.icon}
+                  weight={`${Math.round(sub.weight * 100)}%`}
+                  showScore={hasEnoughData}
                 />
-                <p className="text-[11px] text-[var(--text-muted)] leading-snug">{sub.tip}</p>
+                <p className="text-[11px] text-[var(--text-muted)] leading-snug pl-5">{sub.tip}</p>
               </div>
             ))}
           </CardContent>
