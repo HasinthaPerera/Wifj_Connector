@@ -69,6 +69,11 @@ export const routes: RouteConfig[] = [
     label: 'Health Score'
   },
   {
+    path: '/health-dashboard',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.HealthDashboardPage }))),
+    label: 'Health Dashboard'
+  },
+  {
     path: '/ai-diagnosis',
     component: lazy(() => import('../pages').then((m) => ({ default: m.AiDiagnosisPage }))),
     label: 'AI Diagnosis'
