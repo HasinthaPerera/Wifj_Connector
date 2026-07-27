@@ -89,6 +89,11 @@ export const routes: RouteConfig[] = [
     label: 'Process Scanner'
   },
   {
+    path: '/resource-monitor',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.ResourceMonitorPage }))),
+    label: 'Resource Monitor'
+  },
+  {
     path: '/history',
     component: lazy(() => import('../pages').then((m) => ({ default: m.HistoryPage }))),
     label: 'History'

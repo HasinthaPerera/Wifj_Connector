@@ -72,6 +72,27 @@ declare global {
           isSimulated: boolean
         }>
       >
+      getResources: () => Promise<{
+        timestamp: string
+        cpuPercent: number
+        ramUsedMb: number
+        ramTotalMb: number
+        ramPercent: number
+        cpuCores: number
+        cpuModel: string
+        diskReadKbps: number
+        diskWriteKbps: number
+        network: Array<{
+          name: string
+          rxBytes: number
+          txBytes: number
+          rxKbps: number
+          txKbps: number
+        }>
+        platform: string
+        uptimeSeconds: number
+        isSimulated: boolean
+      }>
       db: {
         getSpeedTests: () => Promise<
           Array<{
