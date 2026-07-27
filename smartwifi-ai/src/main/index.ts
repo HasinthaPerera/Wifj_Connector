@@ -6,6 +6,7 @@ import icon from '../../resources/icon.png?asset'
 import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
 import { getNetworkConfiguration, getPublicIpDetails } from './network'
 import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests, deleteSpeedTest } from './db'
+import { scanNetworkProcesses } from './processes'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -73,6 +74,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('net:get-public-ip', async () => {
     return await getPublicIpDetails()
+  })
+
+  ipcMain.handle('net:scan-processes', async () => {
+    return await scanNetworkProcesses()
   })
 
   // Database handlers

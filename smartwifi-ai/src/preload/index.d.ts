@@ -54,6 +54,24 @@ declare global {
         countryCode: string
         isSimulated?: boolean
       }>
+      scanProcesses: () => Promise<
+        Array<{
+          pid: number
+          name: string
+          connections: Array<{
+            localAddress: string
+            localPort: number
+            remoteAddress: string
+            remotePort: number
+            state: string
+            protocol: 'TCP' | 'UDP'
+          }>
+          connectionCount: number
+          estimatedKbps: number
+          category: 'browser' | 'system' | 'media' | 'security' | 'development' | 'game' | 'other'
+          isSimulated: boolean
+        }>
+      >
       db: {
         getSpeedTests: () => Promise<
           Array<{
