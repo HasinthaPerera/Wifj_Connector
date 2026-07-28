@@ -20,7 +20,10 @@ import {
   Timer,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  LayoutGrid,
+  ScanLine,
+  MemoryStick
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -71,9 +74,18 @@ const navigationSections: NavigationSection[] = [
     id: 'intelligence',
     title: 'Intelligence',
     items: [
-      { id: 'health-score', label: 'Health Score', icon: 'HeartPulse', path: '/health-score' },
-      { id: 'ai-diagnosis', label: 'AI Diagnosis', icon: 'Brain', path: '/ai-diagnosis' },
-      { id: 'optimization', label: 'Optimization', icon: 'Wrench', path: '/optimization' }
+      { id: 'health-score',     label: 'Health Score',     icon: 'HeartPulse',  path: '/health-score' },
+      { id: 'health-dashboard', label: 'Health Dashboard', icon: 'LayoutGrid',  path: '/health-dashboard' },
+      { id: 'ai-diagnosis',     label: 'AI Diagnosis',     icon: 'Brain',       path: '/ai-diagnosis' },
+      { id: 'optimization',     label: 'Optimization',     icon: 'Wrench',      path: '/optimization' }
+    ]
+  },
+  {
+    id: 'system',
+    title: 'System',
+    items: [
+      { id: 'process-scanner',  label: 'Process Scanner',  icon: 'ScanLine',    path: '/process-scanner' },
+      { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' }
     ]
   },
   {
@@ -111,7 +123,10 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Settings,
   Info,
   TrendingUp,
-  Timer
+  Timer,
+  LayoutGrid,
+  ScanLine,
+  MemoryStick
 }
 
 /* ─────────────────────────────────────────────────────────────
