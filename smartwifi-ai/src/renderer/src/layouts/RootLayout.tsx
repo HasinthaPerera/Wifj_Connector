@@ -20,7 +20,8 @@ import {
   Timer,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  ScanLine
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -85,6 +86,13 @@ const navigationSections: NavigationSection[] = [
     ]
   },
   {
+    id: 'system',
+    title: 'System',
+    items: [
+      { id: 'process-scanner', label: 'Process Scanner', icon: 'ScanLine', path: '/process-scanner' }
+    ]
+  },
+  {
     id: 'app',
     title: 'Application',
     items: [
@@ -111,7 +119,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Settings,
   Info,
   TrendingUp,
-  Timer
+  Timer,
+  ScanLine
 }
 
 /* ─────────────────────────────────────────────────────────────
