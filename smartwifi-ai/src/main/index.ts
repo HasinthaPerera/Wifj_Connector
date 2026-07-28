@@ -7,6 +7,7 @@ import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
 import { getNetworkConfiguration, getPublicIpDetails } from './network'
 import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests, deleteSpeedTest } from './db'
 import { scanNetworkProcesses } from './processes'
+import { getResourceSnapshot } from './resources'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -78,6 +79,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('net:scan-processes', async () => {
     return await scanNetworkProcesses()
+  })
+
+  ipcMain.handle('sys:get-resources', async () => {
+    return await getResourceSnapshot()
   })
 
   // Database handlers

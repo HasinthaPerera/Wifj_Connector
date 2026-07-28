@@ -8,6 +8,7 @@ const api = {
   getNetworkConfig: () => ipcRenderer.invoke('net:get-config'),
   getPublicIp: () => ipcRenderer.invoke('net:get-public-ip'),
   scanProcesses: () => ipcRenderer.invoke('net:scan-processes'),
+  getResources: () => ipcRenderer.invoke('sys:get-resources'),
   db: {
     getSpeedTests: () => ipcRenderer.invoke('db:get-speed-tests'),
     insertSpeedTest: (result: Record<string, unknown>) => ipcRenderer.invoke('db:insert-speed-test', result),
