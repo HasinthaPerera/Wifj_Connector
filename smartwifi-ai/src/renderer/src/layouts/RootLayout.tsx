@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  ScanLine
   LayoutGrid,
   ScanLine,
   MemoryStick
@@ -97,6 +98,13 @@ const navigationSections: NavigationSection[] = [
     ]
   },
   {
+    id: 'system',
+    title: 'System',
+    items: [
+      { id: 'process-scanner', label: 'Process Scanner', icon: 'ScanLine', path: '/process-scanner' }
+    ]
+  },
+  {
     id: 'app',
     title: 'Application',
     items: [
@@ -124,6 +132,7 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Info,
   TrendingUp,
   Timer,
+  ScanLine
   LayoutGrid,
   ScanLine,
   MemoryStick
