@@ -94,6 +94,11 @@ export const routes: RouteConfig[] = [
     label: 'Resource Monitor'
   },
   {
+    path: '/heavy-usage',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.HeavyUsagePage }))),
+    label: 'Heavy Usage Detection'
+  },
+  {
     path: '/history',
     component: lazy(() => import('../pages').then((m) => ({ default: m.HistoryPage }))),
     label: 'History'
