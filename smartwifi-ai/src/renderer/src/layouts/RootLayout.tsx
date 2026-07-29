@@ -23,7 +23,8 @@ import {
   X,
   LayoutGrid,
   ScanLine,
-  MemoryStick
+  MemoryStick,
+  Flame
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -85,7 +86,8 @@ const navigationSections: NavigationSection[] = [
     title: 'System',
     items: [
       { id: 'process-scanner',  label: 'Process Scanner',  icon: 'ScanLine',    path: '/process-scanner' },
-      { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' }
+      { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' },
+      { id: 'heavy-usage',      label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' }
     ]
   },
   {
@@ -94,13 +96,6 @@ const navigationSections: NavigationSection[] = [
     items: [
       { id: 'history', label: 'History', icon: 'History', path: '/history' },
       { id: 'reports', label: 'Reports', icon: 'FileText', path: '/reports' }
-    ]
-  },
-  {
-    id: 'system',
-    title: 'System',
-    items: [
-      { id: 'process-scanner', label: 'Process Scanner', icon: 'ScanLine', path: '/process-scanner' }
     ]
   },
   {
@@ -133,7 +128,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Timer,
   LayoutGrid,
   ScanLine,
-  MemoryStick
+  MemoryStick,
+  Flame
 }
 
 /* ─────────────────────────────────────────────────────────────
