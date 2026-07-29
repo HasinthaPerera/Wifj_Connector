@@ -1,15 +1,30 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { BarChart3, RefreshCw, ArrowDown, ArrowUp, Play, Square } from 'lucide-react'
-import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import {
+  BarChart3,
+  RefreshCw,
+  ArrowDown,
+  ArrowUp,
+  Play,
+  Square,
+  Radio
+} from 'lucide-react'
+import { Card, CardHeader, CardContent, Button, Badge, StatusPill } from '@/components/ui'
 
 /* ─────────────────────────────────────────────────────────────
    Types
 ───────────────────────────────────────────────────────────── */
 
 interface BandwidthSample {
-  t: number // monotonic index
+  t: number // monotonic timestamp index
+  timeLabel: string
   dlKbps: number // download KB/s
   ulKbps: number // upload KB/s
+}
+
+interface NetworkIfaceIO {
+  name: string
+  rxKbps: number
+  txKbps: number
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -18,16 +33,13 @@ interface BandwidthSample {
 
 /** Samples kept in the rolling window */
 const WINDOW = 60
-/** Poll interval in ms */
-const INTERVAL_MS = 1000
+/** Default poll interval in ms */
+const DEFAULT_INTERVAL_MS = 1000
 /** Peak scale ceiling in KB/s — chart auto-scales above this */
 const BASELINE_CEIL = 2048
 
 /* ─────────────────────────────────────────────────────────────
-   Simulation engine
-   Models a home broadband connection with realistic fluctuations:
-   - Base ~94 Mbps download / ~41 Mbps upload
-   - Occasional TCP slow-start dips and congestion bursts
+   Simulation engine (Fallback when hardware IPC is unavail)
 ───────────────────────────────────────────────────────────── */
 
 interface SimState {
@@ -99,9 +111,7 @@ function gradeVariant(g: RateGrade): 'accent' | 'primary' | 'warning' | 'danger'
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Dual-line area chart (SVG)
-   Renders download (primary) and upload (accent) on the same axis,
-   auto-scaling to the rolling window peak.
+   Dual-line area chart with interactive inspection tooltip
 ───────────────────────────────────────────────────────────── */
 
 interface BandwidthChartProps {
@@ -115,8 +125,10 @@ function BandwidthChart({
   showDownload,
   showUpload
 }: BandwidthChartProps): React.JSX.Element {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
+
   const W = 600
-  const H = 120
+  const H = 140
   const PAD = 6
 
   const innerW = W - PAD * 2
@@ -130,14 +142,10 @@ function BandwidthChart({
   const peak = Math.max(...allValues, 1)
 
   const yOf = (kbps: number): number => PAD + (1 - kbps / peak) * innerH
-
   const step = innerW / Math.max(WINDOW - 1, 1)
-
-  // Pad left with empty space when < WINDOW samples exist
   const offset = (WINDOW - samples.length) * step
 
   const dlPoints = samples.map((s, i) => `${PAD + offset + i * step},${yOf(s.dlKbps)}`).join(' ')
-
   const ulPoints = samples.map((s, i) => `${PAD + offset + i * step},${yOf(s.ulKbps)}`).join(' ')
 
   const lastDlX = PAD + offset + (samples.length - 1) * step
@@ -145,20 +153,35 @@ function BandwidthChart({
   const lastDlY = samples.length > 0 ? yOf(samples[samples.length - 1].dlKbps) : H / 2
   const lastUlY = samples.length > 0 ? yOf(samples[samples.length - 1].ulKbps) : H / 2
 
-  // Y-axis tick labels
   const ticks = [0.25, 0.5, 0.75, 1.0].map((frac) => ({
     frac,
     value: Math.round(peak * (1 - frac)),
     y: PAD + frac * innerH
   }))
 
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>): void => {
+    if (samples.length === 0) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const mouseX = ((e.clientX - rect.left) / rect.width) * W
+    const relX = mouseX - (PAD + offset)
+    const idx = Math.round(relX / step)
+    if (idx >= 0 && idx < samples.length) {
+      setHoverIndex(idx)
+    } else {
+      setHoverIndex(null)
+    }
+  }
+
   if (samples.length < 2) {
     return (
-      <div className="w-full h-32 flex items-center justify-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border-color)] rounded-lg">
-        Collecting data — chart populates after 2 samples...
+      <div className="w-full h-36 flex items-center justify-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border-color)] rounded-lg">
+        Collecting live traffic data — chart populates after 2 samples...
       </div>
     )
   }
+
+  const hoverSample = hoverIndex !== null ? samples[hoverIndex] : null
+  const hoverX = hoverIndex !== null ? PAD + offset + hoverIndex * step : 0
 
   return (
     <div className="relative">
@@ -174,11 +197,13 @@ function BandwidthChart({
         ))}
       </div>
 
-      <div className="ml-12">
+      <div className="ml-12 relative">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="w-full h-32"
+          className="w-full h-36 overflow-visible cursor-crosshair"
           preserveAspectRatio="none"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoverIndex(null)}
           aria-label="Bandwidth chart"
         >
           {/* Grid lines */}
@@ -197,7 +222,7 @@ function BandwidthChart({
           ))}
 
           {/* Download area + line */}
-          {showDownload && samples.length >= 2 && (
+          {showDownload && (
             <>
               <polyline
                 points={`${PAD + offset},${H - PAD} ${dlPoints} ${lastDlX},${H - PAD}`}
@@ -208,17 +233,17 @@ function BandwidthChart({
               <polyline
                 points={dlPoints}
                 fill="none"
-                stroke="var(--color-primary, #6366f1)"
+                stroke="var(--color-primary-500, #6366f1)"
                 strokeWidth="2"
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
-              <circle cx={lastDlX} cy={lastDlY} r="3.5" fill="var(--color-primary, #6366f1)" />
+              <circle cx={lastDlX} cy={lastDlY} r="3.5" fill="var(--color-primary-500, #6366f1)" />
             </>
           )}
 
           {/* Upload area + line */}
-          {showUpload && samples.length >= 2 && (
+          {showUpload && (
             <>
               <polyline
                 points={`${PAD + offset},${H - PAD} ${ulPoints} ${lastUlX},${H - PAD}`}
@@ -229,27 +254,66 @@ function BandwidthChart({
               <polyline
                 points={ulPoints}
                 fill="none"
-                stroke="var(--color-accent, #10b981)"
+                stroke="var(--color-accent-500, #10b981)"
                 strokeWidth="2"
                 strokeLinejoin="round"
                 strokeLinecap="round"
                 strokeDasharray="5 2"
               />
-              <circle cx={lastUlX} cy={lastUlY} r="3.5" fill="var(--color-accent, #10b981)" />
+              <circle cx={lastUlX} cy={lastUlY} r="3.5" fill="var(--color-accent-500, #10b981)" />
             </>
+          )}
+
+          {/* Hover indicator vertical line */}
+          {hoverSample && (
+            <line
+              x1={hoverX}
+              y1={PAD}
+              x2={hoverX}
+              y2={H - PAD}
+              stroke="var(--text-muted)"
+              strokeWidth="1"
+              strokeDasharray="2 2"
+            />
           )}
 
           <defs>
             <linearGradient id="dlAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-primary, #6366f1)" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="var(--color-primary, #6366f1)" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-primary-500, #6366f1)" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="var(--color-primary-500, #6366f1)" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="ulAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-accent, #10b981)" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="var(--color-accent, #10b981)" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-accent-500, #10b981)" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="var(--color-accent-500, #10b981)" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>
+
+        {/* Hover Tooltip Overlay */}
+        {hoverSample && (
+          <div
+            className="absolute top-2 pointer-events-none bg-[var(--bg-card)] border border-[var(--border-color)] shadow-lg rounded-lg p-2 text-[10px] space-y-1 z-10 font-mono"
+            style={{
+              left: Math.min(Math.max(hoverX - 60, 0), W - 140)
+            }}
+          >
+            <div className="text-[var(--text-muted)] font-semibold border-b border-[var(--border-color)] pb-0.5">
+              Time: {hoverSample.timeLabel}
+            </div>
+            {showDownload && (
+              <div className="flex items-center justify-between gap-3 text-primary-500">
+                <span>Download:</span>
+                <span className="font-bold">{fmtRate(hoverSample.dlKbps)}</span>
+              </div>
+            )}
+            {showUpload && (
+              <div className="flex items-center justify-between gap-3 text-accent-500">
+                <span>Upload:</span>
+                <span className="font-bold">{fmtRate(hoverSample.ulKbps)}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* X-axis time label */}
         <div className="flex justify-between text-[9px] text-[var(--text-muted)] font-mono mt-1 px-1">
@@ -262,7 +326,7 @@ function BandwidthChart({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Inline mini-sparkline (used in stat cards)
+   Inline mini-sparkline
 ───────────────────────────────────────────────────────────── */
 
 function MiniSparkline({
@@ -331,15 +395,20 @@ function MiniSparkline({
 ───────────────────────────────────────────────────────────── */
 
 /**
- * BandwidthPage — Real-time bandwidth speed chart page.
- * Simulates live download/upload throughput sampling at 1-second intervals,
- * rendering dual-trace area charts, rolling statistics, and session totals.
+ * BandwidthPage — Real-time bandwidth monitor component.
+ * Integrates live IPC network interface sampling from main process with
+ * fallback broadband simulation, configurable poll rates, and dual-trace metrics.
  */
 export function BandwidthPage(): React.JSX.Element {
-  const [isRunning, setIsRunning] = useState(false)
+  const [isRunning, setIsRunning] = useState(true)
   const [samples, setSamples] = useState<BandwidthSample[]>([])
   const [showDownload, setShowDownload] = useState(true)
   const [showUpload, setShowUpload] = useState(true)
+  const [intervalMs, setIntervalMs] = useState(DEFAULT_INTERVAL_MS)
+  const [selectedIface, setSelectedIface] = useState<string>('all')
+
+  const [availableIfaces, setAvailableIfaces] = useState<NetworkIfaceIO[]>([])
+  const [isHardwareApi, setIsHardwareApi] = useState(false)
 
   // Session totals (in KB)
   const [totalDlKb, setTotalDlKb] = useState(0)
@@ -349,67 +418,118 @@ export function BandwidthPage(): React.JSX.Element {
   const simStateRef = useRef<SimState>(initSim())
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const runTick = useCallback(() => {
+  const fetchSample = useCallback(async () => {
     tickRef.current += 1
     const t = tickRef.current
-    const { state, dlKbps, ulKbps } = tickSim(simStateRef.current)
-    simStateRef.current = state
+    const timeLabel = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
 
-    setSamples((prev) => [...prev.slice(-(WINDOW - 1)), { t, dlKbps, ulKbps }])
+    let dlKbps = 0
+    let ulKbps = 0
+
+    try {
+      if (typeof window.api?.getResources === 'function') {
+        const res = await window.api.getResources()
+        if (res && Array.isArray(res.network) && res.network.length > 0) {
+          setIsHardwareApi(!res.isSimulated)
+          setAvailableIfaces(res.network)
+
+          if (selectedIface === 'all') {
+            dlKbps = res.network.reduce((s, n) => s + n.rxKbps, 0)
+            ulKbps = res.network.reduce((s, n) => s + n.txKbps, 0)
+          } else {
+            const target = res.network.find((n) => n.name === selectedIface)
+            if (target) {
+              dlKbps = target.rxKbps
+              ulKbps = target.txKbps
+            }
+          }
+
+          // If real network stats yield zeroes (e.g. initial baseline), add minimal activity
+          if (dlKbps === 0 && ulKbps === 0 && res.isSimulated) {
+            const sim = tickSim(simStateRef.current)
+            simStateRef.current = sim.state
+            dlKbps = sim.dlKbps
+            ulKbps = sim.ulKbps
+          }
+        } else {
+          const sim = tickSim(simStateRef.current)
+          simStateRef.current = sim.state
+          dlKbps = sim.dlKbps
+          ulKbps = sim.ulKbps
+        }
+      } else {
+        const sim = tickSim(simStateRef.current)
+        simStateRef.current = sim.state
+        dlKbps = sim.dlKbps
+        ulKbps = sim.ulKbps
+      }
+    } catch {
+      const sim = tickSim(simStateRef.current)
+      simStateRef.current = sim.state
+      dlKbps = sim.dlKbps
+      ulKbps = sim.ulKbps
+    }
+
+    setSamples((prev) => [...prev.slice(-(WINDOW - 1)), { t, timeLabel, dlKbps, ulKbps }])
     setTotalDlKb((prev) => prev + dlKbps)
     setTotalUlKb((prev) => prev + ulKbps)
-  }, [])
+  }, [selectedIface])
 
   const start = useCallback(() => {
-    setSamples([])
-    setTotalDlKb(0)
-    setTotalUlKb(0)
-    tickRef.current = 0
-    simStateRef.current = initSim()
     setIsRunning(true)
-    timerRef.current = setInterval(runTick, INTERVAL_MS)
-  }, [runTick])
+  }, [])
 
   const stop = useCallback(() => {
     setIsRunning(false)
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
   }, [])
 
   const reset = useCallback(() => {
-    stop()
     setSamples([])
     setTotalDlKb(0)
     setTotalUlKb(0)
     tickRef.current = 0
     simStateRef.current = initSim()
-  }, [stop])
+  }, [])
 
-  /* Cleanup on unmount */
+  /* Manage timer based on isRunning and intervalMs */
   useEffect(() => {
+    if (!isRunning) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      timerRef.current = null
+      return
+    }
+
+    fetchSample()
+    timerRef.current = setInterval(fetchSample, intervalMs)
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [])
+  }, [isRunning, intervalMs, fetchSample])
 
   /* ── Derived stats ── */
   const latest = samples[samples.length - 1] ?? null
-
   const dlKbps = latest?.dlKbps ?? 0
   const ulKbps = latest?.ulKbps ?? 0
 
-  const dlHistory = samples.map((s) => s.dlKbps)
-  const ulHistory = samples.map((s) => s.ulKbps)
+  const dlHistory = useMemo(() => samples.map((s) => s.dlKbps), [samples])
+  const ulHistory = useMemo(() => samples.map((s) => s.ulKbps), [samples])
 
-  const avgDl =
-    dlHistory.length > 0 ? Math.round(dlHistory.reduce((a, b) => a + b, 0) / dlHistory.length) : 0
-  const avgUl =
-    ulHistory.length > 0 ? Math.round(ulHistory.reduce((a, b) => a + b, 0) / ulHistory.length) : 0
+  const avgDl = useMemo(
+    () => (dlHistory.length > 0 ? Math.round(dlHistory.reduce((a, b) => a + b, 0) / dlHistory.length) : 0),
+    [dlHistory]
+  )
+  const avgUl = useMemo(
+    () => (ulHistory.length > 0 ? Math.round(ulHistory.reduce((a, b) => a + b, 0) / ulHistory.length) : 0),
+    [ulHistory]
+  )
 
-  const peakDl = dlHistory.length > 0 ? Math.max(...dlHistory) : 0
-  const peakUl = ulHistory.length > 0 ? Math.max(...ulHistory) : 0
+  const peakDl = useMemo(() => (dlHistory.length > 0 ? Math.max(...dlHistory) : 0), [dlHistory])
+  const peakUl = useMemo(() => (ulHistory.length > 0 ? Math.max(...ulHistory) : 0), [ulHistory])
 
   const dlGrade = gradeRate(dlKbps)
   const ulGrade = gradeRate(ulKbps)
@@ -419,13 +539,57 @@ export function BandwidthPage(): React.JSX.Element {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Bandwidth Monitor</h1>
-          <p className="text-xs text-[var(--text-secondary)]">
-            Real-time download and upload throughput charts with {WINDOW}s rolling window
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">Bandwidth Monitor</h1>
+            <StatusPill
+              state={isRunning ? 'connected' : 'disconnected'}
+              label={isRunning ? 'Live Polling' : 'Paused'}
+              size="sm"
+            />
+            {isHardwareApi ? (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent-50 text-accent-600 dark:bg-accent-950 dark:text-accent-400 border border-accent-200 dark:border-accent-800">
+                Hardware API
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-400 border border-primary-200 dark:border-primary-800">
+                Simulated Traffic
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            Real-time throughput metrics with {WINDOW}s rolling dual-trace timeline
           </p>
         </div>
 
         <div className="flex gap-2 items-center flex-wrap justify-end">
+          {/* Interface dropdown */}
+          {availableIfaces.length > 1 && (
+            <select
+              value={selectedIface}
+              onChange={(e) => setSelectedIface(e.target.value)}
+              className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none"
+            >
+              <option value="all">All Adapters</option>
+              {availableIfaces.map((n) => (
+                <option key={n.name} value={n.name}>
+                  {n.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Interval selector */}
+          <select
+            value={intervalMs}
+            onChange={(e) => setIntervalMs(Number(e.target.value))}
+            className="text-xs px-2 py-1.5 rounded-lg bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none"
+            title="Sampling Interval"
+          >
+            <option value={1000}>1s interval</option>
+            <option value={2000}>2s interval</option>
+            <option value={5000}>5s interval</option>
+          </select>
+
           {/* Trace toggles */}
           <button
             onClick={() => setShowDownload((v) => !v)}
@@ -471,7 +635,7 @@ export function BandwidthPage(): React.JSX.Element {
         {/* Download card */}
         <Card className="flex flex-col justify-between">
           <CardHeader
-            title="Download Rate"
+            title="Download Throughput"
             icon={<ArrowDown className="text-primary-500" size={16} />}
           />
           <CardContent className="space-y-3">
@@ -492,30 +656,30 @@ export function BandwidthPage(): React.JSX.Element {
             </div>
             <MiniSparkline
               values={dlHistory.slice(-20)}
-              color="var(--color-primary, #6366f1)"
+              color="var(--color-primary-500, #6366f1)"
               id="dlMini"
             />
             <div className="grid grid-cols-2 gap-2 text-[10px] text-[var(--text-muted)]">
               <div>
-                <div className="font-semibold uppercase tracking-wider">Avg</div>
+                <div className="font-semibold uppercase tracking-wider">Avg Rate</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {fmtRate(avgDl)}
                 </div>
               </div>
               <div>
-                <div className="font-semibold uppercase tracking-wider">Peak</div>
+                <div className="font-semibold uppercase tracking-wider">Peak Rate</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {fmtRate(peakDl)}
                 </div>
               </div>
               <div>
-                <div className="font-semibold uppercase tracking-wider">Total</div>
+                <div className="font-semibold uppercase tracking-wider">Total Downloaded</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {fmtBytes(totalDlKb)}
                 </div>
               </div>
               <div>
-                <div className="font-semibold uppercase tracking-wider">Samples</div>
+                <div className="font-semibold uppercase tracking-wider">Sample Count</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {samples.length}
                 </div>
@@ -527,7 +691,7 @@ export function BandwidthPage(): React.JSX.Element {
         {/* Upload card */}
         <Card className="flex flex-col justify-between">
           <CardHeader
-            title="Upload Rate"
+            title="Upload Throughput"
             icon={<ArrowUp className="text-accent-500" size={16} />}
           />
           <CardContent className="space-y-3">
@@ -548,30 +712,30 @@ export function BandwidthPage(): React.JSX.Element {
             </div>
             <MiniSparkline
               values={ulHistory.slice(-20)}
-              color="var(--color-accent, #10b981)"
+              color="var(--color-accent-500, #10b981)"
               id="ulMini"
             />
             <div className="grid grid-cols-2 gap-2 text-[10px] text-[var(--text-muted)]">
               <div>
-                <div className="font-semibold uppercase tracking-wider">Avg</div>
+                <div className="font-semibold uppercase tracking-wider">Avg Rate</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {fmtRate(avgUl)}
                 </div>
               </div>
               <div>
-                <div className="font-semibold uppercase tracking-wider">Peak</div>
+                <div className="font-semibold uppercase tracking-wider">Peak Rate</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {fmtRate(peakUl)}
                 </div>
               </div>
               <div>
-                <div className="font-semibold uppercase tracking-wider">Total</div>
+                <div className="font-semibold uppercase tracking-wider">Total Uploaded</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {fmtBytes(totalUlKb)}
                 </div>
               </div>
               <div>
-                <div className="font-semibold uppercase tracking-wider">Ratio</div>
+                <div className="font-semibold uppercase tracking-wider">DL : UL Ratio</div>
                 <div className="font-mono font-bold text-[var(--text-primary)]">
                   {avgDl > 0 ? `${(avgDl / Math.max(avgUl, 1)).toFixed(1)}:1` : '—'}
                 </div>
@@ -585,7 +749,7 @@ export function BandwidthPage(): React.JSX.Element {
       <Card>
         <CardHeader
           title="Throughput Timeline"
-          subtitle={`${WINDOW}-second rolling window · 1-second sampling interval`}
+          subtitle={`${WINDOW}-sample rolling timeline · ${(intervalMs / 1000).toFixed(0)}s interval · Hover chart to inspect exact rates`}
           icon={<BarChart3 size={16} />}
         />
         <CardContent>
@@ -610,7 +774,7 @@ export function BandwidthPage(): React.JSX.Element {
         <CardHeader
           title="Bandwidth Tier Reference"
           subtitle="FCC-aligned broadband classification thresholds"
-          icon={<BarChart3 size={16} />}
+          icon={<Radio size={16} />}
         />
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -665,7 +829,7 @@ export function BandwidthPage(): React.JSX.Element {
                   <div className="text-[var(--text-muted)] text-[10px]">{tier.desc}</div>
                   {isActive && (
                     <Badge variant={gradeVariant(tier.grade)} size="sm" className="mt-1">
-                      Current
+                      Current Tier
                     </Badge>
                   )}
                 </div>
