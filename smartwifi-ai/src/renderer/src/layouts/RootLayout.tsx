@@ -21,7 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  ScanLine
   LayoutGrid,
   ScanLine,
   MemoryStick
@@ -132,7 +131,6 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Info,
   TrendingUp,
   Timer,
-  ScanLine
   LayoutGrid,
   ScanLine,
   MemoryStick
