@@ -79,6 +79,11 @@ export const routes: RouteConfig[] = [
     label: 'AI Diagnosis'
   },
   {
+    path: '/ai-rule-engine',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.AiRuleEnginePage }))),
+    label: 'AI Rule Engine'
+  },
+  {
     path: '/optimization',
     component: lazy(() => import('../pages').then((m) => ({ default: m.OptimizationPage }))),
     label: 'Optimization'
