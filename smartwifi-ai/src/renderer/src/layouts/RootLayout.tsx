@@ -24,7 +24,8 @@ import {
   LayoutGrid,
   ScanLine,
   MemoryStick,
-  Flame
+  Flame,
+  Sparkles
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -78,6 +79,7 @@ const navigationSections: NavigationSection[] = [
       { id: 'health-score',     label: 'Health Score',     icon: 'HeartPulse',  path: '/health-score' },
       { id: 'health-dashboard', label: 'Health Dashboard', icon: 'LayoutGrid',  path: '/health-dashboard' },
       { id: 'ai-diagnosis',     label: 'AI Diagnosis',     icon: 'Brain',       path: '/ai-diagnosis' },
+      { id: 'ai-rule-engine',   label: 'AI Rule Engine',   icon: 'Sparkles',    path: '/ai-rule-engine' },
       { id: 'optimization',     label: 'Optimization',     icon: 'Wrench',      path: '/optimization' }
     ]
   },
@@ -129,7 +131,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   LayoutGrid,
   ScanLine,
   MemoryStick,
-  Flame
+  Flame,
+  Sparkles
 }
 
 /* ─────────────────────────────────────────────────────────────
