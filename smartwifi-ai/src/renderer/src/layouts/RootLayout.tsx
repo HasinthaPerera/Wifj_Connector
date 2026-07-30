@@ -25,6 +25,7 @@ import {
   ScanLine,
   MemoryStick,
   Flame,
+  BellRing
   Sparkles
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
@@ -89,7 +90,8 @@ const navigationSections: NavigationSection[] = [
     items: [
       { id: 'process-scanner',  label: 'Process Scanner',  icon: 'ScanLine',    path: '/process-scanner' },
       { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' },
-      { id: 'heavy-usage',      label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' }
+      { id: 'heavy-usage',      label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' },
+      { id: 'network-alerts',   label: 'Network Alerts',   icon: 'BellRing',   path: '/network-alerts' }
     ]
   },
   {
@@ -132,6 +134,7 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   ScanLine,
   MemoryStick,
   Flame,
+  BellRing
   Sparkles
 }
 

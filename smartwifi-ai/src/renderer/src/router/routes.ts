@@ -104,6 +104,11 @@ export const routes: RouteConfig[] = [
     label: 'Heavy Usage Detection'
   },
   {
+    path: '/network-alerts',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.NetworkAlertsPage }))),
+    label: 'Network Alerts'
+  },
+  {
     path: '/history',
     component: lazy(() => import('../pages').then((m) => ({ default: m.HistoryPage }))),
     label: 'History'
