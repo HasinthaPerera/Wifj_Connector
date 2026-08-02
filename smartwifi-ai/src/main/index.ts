@@ -8,6 +8,13 @@ import { getNetworkConfiguration, getPublicIpDetails } from './network'
 import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests, deleteSpeedTest } from './db'
 import { scanNetworkProcesses } from './processes'
 import { getResourceSnapshot } from './resources'
+import {
+  flushDnsCache,
+  renewIpLease,
+  resetTcpStack,
+  benchmarkDnsServers,
+  runAutoOptimizationSuite
+} from './optimization'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -84,6 +91,30 @@ app.whenReady().then(() => {
   ipcMain.handle('sys:get-resources', async () => {
     return await getResourceSnapshot()
   })
+
+  // Optimization handlers
+  ipcMain.handle('opt:flush-dns', async () => {
+    return await flushDnsCache()
+  })
+
+  ipcMain.handle('opt:renew-lease', async () => {
+    return await renewIpLease()
+  })
+
+  ipcMain.handle('opt:reset-tcp', async () => {
+    return await resetTcpStack()
+  })
+
+  ipcMain.handle('opt:benchmark-dns', async () => {
+    return await benchmarkDnsServers()
+  })
+
+  ipcMain.handle(
+    'opt:auto-optimize',
+    async (_, preset: 'gaming' | 'streaming' | 'work' | 'balanced') => {
+      return await runAutoOptimizationSuite(preset)
+    }
+  )
 
   // Database handlers
   ipcMain.handle('db:get-speed-tests', async () => {
