@@ -116,6 +116,46 @@ declare global {
         clearSpeedTests: () => Promise<void>
         deleteSpeedTest: (id: number) => Promise<void>
       }
+      optimization: {
+        flushDns: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        renewLease: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        resetTcpStack: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        benchmarkDns: () => Promise<
+          Array<{
+            id: string
+            name: string
+            primaryDns: string
+            secondaryDns: string
+            latencyMs: number
+            status: 'fast' | 'average' | 'slow'
+          }>
+        >
+        autoOptimize: (preset?: 'gaming' | 'streaming' | 'work' | 'balanced') => Promise<{
+          preset: string
+          scoreBefore: number
+          scoreAfter: number
+          latencyBeforeMs: number
+          latencyAfterMs: number
+          appliedActions: string[]
+          timestamp: string
+          isSimulated: boolean
+        }>
+      }
       exportCsv: (content: string) => Promise<boolean>
       exportPdf: () => Promise<boolean>
     }

@@ -11,9 +11,17 @@ const api = {
   getResources: () => ipcRenderer.invoke('sys:get-resources'),
   db: {
     getSpeedTests: () => ipcRenderer.invoke('db:get-speed-tests'),
-    insertSpeedTest: (result: Record<string, unknown>) => ipcRenderer.invoke('db:insert-speed-test', result),
+    insertSpeedTest: (result: Record<string, unknown>) =>
+      ipcRenderer.invoke('db:insert-speed-test', result),
     clearSpeedTests: () => ipcRenderer.invoke('db:clear-speed-tests'),
     deleteSpeedTest: (id: number) => ipcRenderer.invoke('db:delete-speed-test', id)
+  },
+  optimization: {
+    flushDns: () => ipcRenderer.invoke('opt:flush-dns'),
+    renewLease: () => ipcRenderer.invoke('opt:renew-lease'),
+    resetTcpStack: () => ipcRenderer.invoke('opt:reset-tcp'),
+    benchmarkDns: () => ipcRenderer.invoke('opt:benchmark-dns'),
+    autoOptimize: (preset?: string) => ipcRenderer.invoke('opt:auto-optimize', preset)
   },
   exportCsv: (content: string) => ipcRenderer.invoke('app:export-csv', content),
   exportPdf: () => ipcRenderer.invoke('app:export-pdf')
