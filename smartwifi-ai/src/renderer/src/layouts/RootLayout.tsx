@@ -25,7 +25,8 @@ import {
   ScanLine,
   MemoryStick,
   Flame,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -47,7 +48,8 @@ const navigationSections: NavigationSection[] = [
     items: [
       { id: 'wifi-info', label: 'Wi-Fi Info', icon: 'Wifi', path: '/wifi-info' },
       { id: 'network-info', label: 'Network Info', icon: 'Network', path: '/network-info' },
-      { id: 'speed-test', label: 'Speed Test', icon: 'Gauge', path: '/speed-test' }
+      { id: 'speed-test', label: 'Speed Test', icon: 'Gauge', path: '/speed-test' },
+      { id: 'dns-flush', label: 'DNS Flush Tool', icon: 'RefreshCw', path: '/dns-flush' }
     ]
   },
   {
@@ -76,20 +78,35 @@ const navigationSections: NavigationSection[] = [
     id: 'intelligence',
     title: 'Intelligence',
     items: [
-      { id: 'health-score',     label: 'Health Score',     icon: 'HeartPulse',  path: '/health-score' },
-      { id: 'health-dashboard', label: 'Health Dashboard', icon: 'LayoutGrid',  path: '/health-dashboard' },
-      { id: 'ai-diagnosis',     label: 'AI Diagnosis',     icon: 'Brain',       path: '/ai-diagnosis' },
-      { id: 'ai-rule-engine',   label: 'AI Rule Engine',   icon: 'Sparkles',    path: '/ai-rule-engine' },
-      { id: 'optimization',     label: 'Optimization',     icon: 'Wrench',      path: '/optimization' }
+      { id: 'health-score', label: 'Health Score', icon: 'HeartPulse', path: '/health-score' },
+      {
+        id: 'health-dashboard',
+        label: 'Health Dashboard',
+        icon: 'LayoutGrid',
+        path: '/health-dashboard'
+      },
+      { id: 'ai-diagnosis', label: 'AI Diagnosis', icon: 'Brain', path: '/ai-diagnosis' },
+      { id: 'ai-rule-engine', label: 'AI Rule Engine', icon: 'Sparkles', path: '/ai-rule-engine' },
+      { id: 'optimization', label: 'Optimization', icon: 'Wrench', path: '/optimization' }
     ]
   },
   {
     id: 'system',
     title: 'System',
     items: [
-      { id: 'process-scanner',  label: 'Process Scanner',  icon: 'ScanLine',    path: '/process-scanner' },
-      { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' },
-      { id: 'heavy-usage',      label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' }
+      {
+        id: 'process-scanner',
+        label: 'Process Scanner',
+        icon: 'ScanLine',
+        path: '/process-scanner'
+      },
+      {
+        id: 'resource-monitor',
+        label: 'Resource Monitor',
+        icon: 'MemoryStick',
+        path: '/resource-monitor'
+      },
+      { id: 'heavy-usage', label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' }
     ]
   },
   {
@@ -132,7 +149,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   ScanLine,
   MemoryStick,
   Flame,
-  Sparkles
+  Sparkles,
+  RefreshCw
 }
 
 /* ─────────────────────────────────────────────────────────────

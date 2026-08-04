@@ -13,7 +13,8 @@ import {
   renewIpLease,
   resetTcpStack,
   benchmarkDnsServers,
-  runAutoOptimizationSuite
+  runAutoOptimizationSuite,
+  resolveDomain
 } from './optimization'
 
 function createWindow(): void {
@@ -115,6 +116,10 @@ app.whenReady().then(() => {
       return await runAutoOptimizationSuite(preset)
     }
   )
+
+  ipcMain.handle('opt:resolve-domain', async (_, domain: string) => {
+    return await resolveDomain(domain)
+  })
 
   // Database handlers
   ipcMain.handle('db:get-speed-tests', async () => {

@@ -155,6 +155,15 @@ declare global {
           timestamp: string
           isSimulated: boolean
         }>
+        resolveDomain: (domain: string) => Promise<{
+          domain: string
+          addresses: string[]
+          latencyMs: number
+          resolver: string
+          timestamp: string
+          success: boolean
+          error?: string
+        }>
       }
       exportCsv: (content: string) => Promise<boolean>
       exportPdf: () => Promise<boolean>
