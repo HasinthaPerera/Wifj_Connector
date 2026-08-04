@@ -94,6 +94,11 @@ export const routes: RouteConfig[] = [
     label: 'DNS Flush Tool'
   },
   {
+    path: '/renew-ip',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.RenewIpPage }))),
+    label: 'Renew IP Tool'
+  },
+  {
     path: '/process-scanner',
     component: lazy(() => import('../pages').then((m) => ({ default: m.ProcessScannerPage }))),
     label: 'Process Scanner'

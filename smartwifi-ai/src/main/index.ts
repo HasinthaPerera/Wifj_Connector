@@ -10,6 +10,7 @@ import { scanNetworkProcesses } from './processes'
 import { getResourceSnapshot } from './resources'
 import {
   flushDnsCache,
+  releaseIpLease,
   renewIpLease,
   resetTcpStack,
   benchmarkDnsServers,
@@ -96,6 +97,10 @@ app.whenReady().then(() => {
   // Optimization handlers
   ipcMain.handle('opt:flush-dns', async () => {
     return await flushDnsCache()
+  })
+
+  ipcMain.handle('opt:release-lease', async () => {
+    return await releaseIpLease()
   })
 
   ipcMain.handle('opt:renew-lease', async () => {

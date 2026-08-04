@@ -123,6 +123,12 @@ declare global {
           output?: string
           timestamp: string
         }>
+        releaseLease: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
         renewLease: () => Promise<{
           success: boolean
           message: string

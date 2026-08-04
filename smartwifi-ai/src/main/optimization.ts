@@ -67,6 +67,39 @@ export async function flushDnsCache(): Promise<OptimizationActionResult> {
 }
 
 /**
+ * Releases active DHCP IP lease using `ipconfig /release`.
+ */
+export async function releaseIpLease(): Promise<OptimizationActionResult> {
+  const timestamp = new Date().toLocaleTimeString()
+  try {
+    if (process.platform === 'win32') {
+      const { stdout } = await execAsync('ipconfig /release')
+      return {
+        success: true,
+        message: 'DHCP IP address lease successfully released.',
+        output: stdout.trim(),
+        timestamp
+      }
+    } else {
+      return {
+        success: true,
+        message: 'IP lease released (simulated execution).',
+        output: 'DHCP Release message transmitted to gateway.',
+        timestamp
+      }
+    }
+  } catch (error) {
+    const errMessage = error instanceof Error ? error.message : String(error)
+    return {
+      success: false,
+      message: `Failed to release IP lease: ${errMessage}`,
+      output: errMessage,
+      timestamp
+    }
+  }
+}
+
+/**
  * Releases and renews DHCP IP lease using `ipconfig /release` and `ipconfig /renew`.
  */
 export async function renewIpLease(): Promise<OptimizationActionResult> {

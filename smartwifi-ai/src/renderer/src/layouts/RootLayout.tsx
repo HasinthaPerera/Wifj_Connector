@@ -25,8 +25,9 @@ import {
   ScanLine,
   MemoryStick,
   Flame,
-  BellRing
-  Sparkles
+  BellRing,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -49,7 +50,8 @@ const navigationSections: NavigationSection[] = [
       { id: 'wifi-info', label: 'Wi-Fi Info', icon: 'Wifi', path: '/wifi-info' },
       { id: 'network-info', label: 'Network Info', icon: 'Network', path: '/network-info' },
       { id: 'speed-test', label: 'Speed Test', icon: 'Gauge', path: '/speed-test' },
-      { id: 'dns-flush', label: 'DNS Flush Tool', icon: 'RefreshCw', path: '/dns-flush' }
+      { id: 'dns-flush', label: 'DNS Flush Tool', icon: 'RefreshCw', path: '/dns-flush' },
+      { id: 'renew-ip', label: 'Renew IP Tool', icon: 'Zap', path: '/renew-ip' }
     ]
   },
   {
@@ -94,10 +96,20 @@ const navigationSections: NavigationSection[] = [
     id: 'system',
     title: 'System',
     items: [
-      { id: 'process-scanner',  label: 'Process Scanner',  icon: 'ScanLine',    path: '/process-scanner' },
-      { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' },
-      { id: 'heavy-usage',      label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' },
-      { id: 'network-alerts',   label: 'Network Alerts',   icon: 'BellRing',   path: '/network-alerts' }
+      {
+        id: 'process-scanner',
+        label: 'Process Scanner',
+        icon: 'ScanLine',
+        path: '/process-scanner'
+      },
+      {
+        id: 'resource-monitor',
+        label: 'Resource Monitor',
+        icon: 'MemoryStick',
+        path: '/resource-monitor'
+      },
+      { id: 'heavy-usage', label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' },
+      { id: 'network-alerts', label: 'Network Alerts', icon: 'BellRing', path: '/network-alerts' }
     ]
   },
   {
@@ -140,8 +152,9 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   ScanLine,
   MemoryStick,
   Flame,
-  BellRing
-  Sparkles
+  BellRing,
+  Sparkles,
+  RefreshCw
 }
 
 /* ─────────────────────────────────────────────────────────────
