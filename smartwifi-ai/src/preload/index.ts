@@ -18,6 +18,7 @@ const api = {
   },
   optimization: {
     flushDns: () => ipcRenderer.invoke('opt:flush-dns'),
+    releaseLease: () => ipcRenderer.invoke('opt:release-lease'),
     renewLease: () => ipcRenderer.invoke('opt:renew-lease'),
     resetTcpStack: () => ipcRenderer.invoke('opt:reset-tcp'),
     benchmarkDns: () => ipcRenderer.invoke('opt:benchmark-dns'),
