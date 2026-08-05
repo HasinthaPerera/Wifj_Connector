@@ -89,6 +89,11 @@ export const routes: RouteConfig[] = [
     label: 'Optimization'
   },
   {
+    path: '/dns-recommendation',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.DnsRecommendationPage }))),
+    label: 'DNS Recommendation'
+  },
+  {
     path: '/dns-flush',
     component: lazy(() => import('../pages').then((m) => ({ default: m.DnsFlushPage }))),
     label: 'DNS Flush Tool'
