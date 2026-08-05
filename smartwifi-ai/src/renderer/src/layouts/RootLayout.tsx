@@ -91,7 +91,13 @@ const navigationSections: NavigationSection[] = [
       },
       { id: 'ai-diagnosis', label: 'AI Diagnosis', icon: 'Brain', path: '/ai-diagnosis' },
       { id: 'ai-rule-engine', label: 'AI Rule Engine', icon: 'Sparkles', path: '/ai-rule-engine' },
-      { id: 'optimization', label: 'Optimization', icon: 'Wrench', path: '/optimization' }
+      { id: 'optimization', label: 'Optimization', icon: 'Wrench', path: '/optimization' },
+      {
+        id: 'dns-recommendation',
+        label: 'DNS Recommendation',
+        icon: 'Sparkles',
+        path: '/dns-recommendation'
+      }
     ]
   },
   {
