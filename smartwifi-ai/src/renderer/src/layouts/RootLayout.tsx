@@ -27,7 +27,8 @@ import {
   Flame,
   BellRing,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  ZapOff
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -51,7 +52,8 @@ const navigationSections: NavigationSection[] = [
       { id: 'network-info', label: 'Network Info', icon: 'Network', path: '/network-info' },
       { id: 'speed-test', label: 'Speed Test', icon: 'Gauge', path: '/speed-test' },
       { id: 'dns-flush', label: 'DNS Flush Tool', icon: 'RefreshCw', path: '/dns-flush' },
-      { id: 'renew-ip', label: 'Renew IP Tool', icon: 'Zap', path: '/renew-ip' }
+      { id: 'renew-ip', label: 'Renew IP Tool', icon: 'Zap', path: '/renew-ip' },
+      { id: 'release-ip', label: 'Release IP Tool', icon: 'ZapOff', path: '/release-ip' }
     ]
   },
   {
@@ -154,7 +156,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Flame,
   BellRing,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  ZapOff
 }
 
 /* ─────────────────────────────────────────────────────────────

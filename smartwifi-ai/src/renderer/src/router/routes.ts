@@ -99,6 +99,11 @@ export const routes: RouteConfig[] = [
     label: 'Renew IP Tool'
   },
   {
+    path: '/release-ip',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.ReleaseIpPage }))),
+    label: 'Release IP Tool'
+  },
+  {
     path: '/process-scanner',
     component: lazy(() => import('../pages').then((m) => ({ default: m.ProcessScannerPage }))),
     label: 'Process Scanner'
