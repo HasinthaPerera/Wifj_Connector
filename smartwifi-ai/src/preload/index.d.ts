@@ -170,6 +170,20 @@ declare global {
           success: boolean
           error?: string
         }>
+        resetNetwork: (options?: {
+          resetWinsock?: boolean
+          resetTcpIp?: boolean
+          flushDns?: boolean
+          clearArp?: boolean
+          renewDhcp?: boolean
+        }) => Promise<{
+          success: boolean
+          timestamp: string
+          stepsExecuted: Array<{ step: string; success: boolean; output: string }>
+          combinedOutput: string
+          rebootRecommended: boolean
+          isSimulated: boolean
+        }>
       }
       exportCsv: (content: string) => Promise<boolean>
       exportPdf: () => Promise<boolean>
