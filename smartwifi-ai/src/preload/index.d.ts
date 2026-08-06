@@ -29,6 +29,18 @@ declare global {
           bssid: string
         }>
       >
+      reconnectWifi: (
+        interfaceName?: string,
+        ssid?: string
+      ) => Promise<{
+        success: boolean
+        message: string
+        output: string
+        interfaceName: string
+        ssid: string
+        timestamp: string
+        isSimulated: boolean
+      }>
       getNetworkConfig: () => Promise<
         Array<{
           name: string
