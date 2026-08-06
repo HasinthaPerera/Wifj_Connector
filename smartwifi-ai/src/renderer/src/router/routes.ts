@@ -114,6 +114,11 @@ export const routes: RouteConfig[] = [
     label: 'Network Reset Tool'
   },
   {
+    path: '/wifi-reconnect',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.WifiReconnectPage }))),
+    label: 'Wi-Fi Reconnect Tool'
+  },
+  {
     path: '/process-scanner',
     component: lazy(() => import('../pages').then((m) => ({ default: m.ProcessScannerPage }))),
     label: 'Process Scanner'

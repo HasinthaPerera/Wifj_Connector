@@ -5,6 +5,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   detectAdapter: () => ipcRenderer.invoke('wifi:detect-adapter'),
   scanNetworks: () => ipcRenderer.invoke('wifi:scan-networks'),
+  reconnectWifi: (interfaceName?: string, ssid?: string) =>
+    ipcRenderer.invoke('wifi:reconnect', interfaceName, ssid),
   getNetworkConfig: () => ipcRenderer.invoke('net:get-config'),
   getPublicIp: () => ipcRenderer.invoke('net:get-public-ip'),
   scanProcesses: () => ipcRenderer.invoke('net:scan-processes'),

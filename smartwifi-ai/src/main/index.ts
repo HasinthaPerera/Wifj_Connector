@@ -3,7 +3,7 @@ import { join } from 'path'
 import * as fs from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { detectActiveWifiAdapter, scanNearbyNetworks } from './wifi'
+import { detectActiveWifiAdapter, scanNearbyNetworks, reconnectWifiAdapter } from './wifi'
 import { getNetworkConfiguration, getPublicIpDetails } from './network'
 import { initDb, getSpeedTests, insertSpeedTest, clearSpeedTests, deleteSpeedTest } from './db'
 import { scanNetworkProcesses } from './processes'
@@ -77,6 +77,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('wifi:scan-networks', async () => {
     return await scanNearbyNetworks()
+  })
+
+  ipcMain.handle('wifi:reconnect', async (_, interfaceName?: string, ssid?: string) => {
+    return await reconnectWifiAdapter(interfaceName, ssid)
   })
 
   ipcMain.handle('net:get-config', async () => {

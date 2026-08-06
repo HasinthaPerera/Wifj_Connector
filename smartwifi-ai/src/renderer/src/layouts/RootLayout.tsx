@@ -60,6 +60,12 @@ const navigationSections: NavigationSection[] = [
         label: 'Network Reset Tool',
         icon: 'RotateCcw',
         path: '/network-reset'
+      },
+      {
+        id: 'wifi-reconnect',
+        label: 'Wi-Fi Reconnect Tool',
+        icon: 'RefreshCw',
+        path: '/wifi-reconnect'
       }
     ]
   },
