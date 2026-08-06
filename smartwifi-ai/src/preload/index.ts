@@ -23,7 +23,9 @@ const api = {
     resetTcpStack: () => ipcRenderer.invoke('opt:reset-tcp'),
     benchmarkDns: () => ipcRenderer.invoke('opt:benchmark-dns'),
     autoOptimize: (preset?: string) => ipcRenderer.invoke('opt:auto-optimize', preset),
-    resolveDomain: (domain: string) => ipcRenderer.invoke('opt:resolve-domain', domain)
+    resolveDomain: (domain: string) => ipcRenderer.invoke('opt:resolve-domain', domain),
+    resetNetwork: (options?: Record<string, boolean>) =>
+      ipcRenderer.invoke('opt:full-network-reset', options)
   },
   exportCsv: (content: string) => ipcRenderer.invoke('app:export-csv', content),
   exportPdf: () => ipcRenderer.invoke('app:export-pdf')

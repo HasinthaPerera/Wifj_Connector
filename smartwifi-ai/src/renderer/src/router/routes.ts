@@ -109,6 +109,11 @@ export const routes: RouteConfig[] = [
     label: 'Release IP Tool'
   },
   {
+    path: '/network-reset',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.NetworkResetPage }))),
+    label: 'Network Reset Tool'
+  },
+  {
     path: '/process-scanner',
     component: lazy(() => import('../pages').then((m) => ({ default: m.ProcessScannerPage }))),
     label: 'Process Scanner'

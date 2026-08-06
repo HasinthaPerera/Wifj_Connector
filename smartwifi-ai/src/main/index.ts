@@ -15,7 +15,8 @@ import {
   resetTcpStack,
   benchmarkDnsServers,
   runAutoOptimizationSuite,
-  resolveDomain
+  resolveDomain,
+  performNetworkReset
 } from './optimization'
 
 function createWindow(): void {
@@ -124,6 +125,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('opt:resolve-domain', async (_, domain: string) => {
     return await resolveDomain(domain)
+  })
+
+  ipcMain.handle('opt:full-network-reset', async (_, options) => {
+    return await performNetworkReset(options)
   })
 
   // Database handlers

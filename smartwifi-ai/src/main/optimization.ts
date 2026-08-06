@@ -350,3 +350,184 @@ export async function resolveDomain(domain: string): Promise<DomainLookupResult>
     }
   }
 }
+
+export interface NetworkResetOptions {
+  resetWinsock?: boolean
+  resetTcpIp?: boolean
+  flushDns?: boolean
+  clearArp?: boolean
+  renewDhcp?: boolean
+}
+
+export interface NetworkResetResult {
+  success: boolean
+  timestamp: string
+  stepsExecuted: Array<{ step: string; success: boolean; output: string }>
+  combinedOutput: string
+  rebootRecommended: boolean
+  isSimulated: boolean
+}
+
+/**
+ * Performs a comprehensive network stack reset across Winsock, TCP/IP, DNS, ARP, and DHCP.
+ */
+export async function performNetworkReset(
+  options: NetworkResetOptions = {}
+): Promise<NetworkResetResult> {
+  const timestamp = new Date().toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+  const stepsExecuted: Array<{ step: string; success: boolean; output: string }> = []
+  let rebootRecommended = false
+
+  const isWin = process.platform === 'win32'
+
+  // Step 1: Winsock Catalog Reset
+  if (options.resetWinsock !== false) {
+    try {
+      if (isWin) {
+        const { stdout } = await execAsync('netsh winsock reset')
+        stepsExecuted.push({
+          step: 'Winsock Catalog Reset',
+          success: true,
+          output: stdout.trim()
+        })
+        rebootRecommended = true
+      } else {
+        stepsExecuted.push({
+          step: 'Winsock Catalog Reset',
+          success: true,
+          output: 'Successfully reset Winsock catalog (simulated).'
+        })
+      }
+    } catch (err) {
+      stepsExecuted.push({
+        step: 'Winsock Catalog Reset',
+        success: false,
+        output: String(err)
+      })
+    }
+  }
+
+  // Step 2: TCP/IP Stack Reset
+  if (options.resetTcpIp !== false) {
+    try {
+      if (isWin) {
+        const { stdout } = await execAsync('netsh int ip reset')
+        stepsExecuted.push({
+          step: 'TCP/IP Stack Reset',
+          success: true,
+          output: stdout.trim()
+        })
+        rebootRecommended = true
+      } else {
+        stepsExecuted.push({
+          step: 'TCP/IP Stack Reset',
+          success: true,
+          output: 'TCP/IP stack reset to factory defaults (simulated).'
+        })
+      }
+    } catch (err) {
+      stepsExecuted.push({
+        step: 'TCP/IP Stack Reset',
+        success: false,
+        output: String(err)
+      })
+    }
+  }
+
+  // Step 3: Flush DNS Cache
+  if (options.flushDns !== false) {
+    try {
+      if (isWin) {
+        const { stdout } = await execAsync('ipconfig /flushdns')
+        stepsExecuted.push({
+          step: 'Flush DNS Resolver Cache',
+          success: true,
+          output: stdout.trim()
+        })
+      } else {
+        stepsExecuted.push({
+          step: 'Flush DNS Resolver Cache',
+          success: true,
+          output: 'DNS Resolver Cache flushed (simulated).'
+        })
+      }
+    } catch (err) {
+      stepsExecuted.push({
+        step: 'Flush DNS Resolver Cache',
+        success: false,
+        output: String(err)
+      })
+    }
+  }
+
+  // Step 4: Clear ARP Cache
+  if (options.clearArp !== false) {
+    try {
+      if (isWin) {
+        const { stdout } = await execAsync('netsh interface ip delete arpcache').catch(() =>
+          execAsync('arp -d *')
+        )
+        stepsExecuted.push({
+          step: 'Clear ARP Cache Table',
+          success: true,
+          output: stdout.trim() || 'ARP cache table cleared.'
+        })
+      } else {
+        stepsExecuted.push({
+          step: 'Clear ARP Cache Table',
+          success: true,
+          output: 'ARP cache table purged (simulated).'
+        })
+      }
+    } catch (err) {
+      stepsExecuted.push({
+        step: 'Clear ARP Cache Table',
+        success: false,
+        output: String(err)
+      })
+    }
+  }
+
+  // Step 5: Renew DHCP IP Lease
+  if (options.renewDhcp !== false) {
+    try {
+      if (isWin) {
+        await execAsync('ipconfig /release').catch(() => {})
+        const { stdout: renewOut } = await execAsync('ipconfig /renew')
+        stepsExecuted.push({
+          step: 'Renew DHCP IP Address Lease',
+          success: true,
+          output: renewOut.trim()
+        })
+      } else {
+        stepsExecuted.push({
+          step: 'Renew DHCP IP Address Lease',
+          success: true,
+          output: 'DHCP ACK received. New IP address lease granted (simulated).'
+        })
+      }
+    } catch (err) {
+      stepsExecuted.push({
+        step: 'Renew DHCP IP Address Lease',
+        success: false,
+        output: String(err)
+      })
+    }
+  }
+
+  const overallSuccess = stepsExecuted.every((s) => s.success)
+  const combinedOutput = stepsExecuted.map((s) => `[${s.step}]\n${s.output}`).join('\n\n')
+
+  return {
+    success: overallSuccess,
+    timestamp,
+    stepsExecuted,
+    combinedOutput,
+    rebootRecommended,
+    isSimulated: !isWin
+  }
+}
