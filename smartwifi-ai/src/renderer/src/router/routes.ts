@@ -89,6 +89,11 @@ export const routes: RouteConfig[] = [
     label: 'Optimization'
   },
   {
+    path: '/auto-optimization',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.AutoOptimizationPage }))),
+    label: 'Automatic Optimization'
+  },
+  {
     path: '/dns-recommendation',
     component: lazy(() => import('../pages').then((m) => ({ default: m.DnsRecommendationPage }))),
     label: 'DNS Recommendation'
