@@ -106,6 +106,12 @@ const navigationSections: NavigationSection[] = [
       { id: 'ai-rule-engine', label: 'AI Rule Engine', icon: 'Sparkles', path: '/ai-rule-engine' },
       { id: 'optimization', label: 'Optimization', icon: 'Wrench', path: '/optimization' },
       {
+        id: 'auto-optimization',
+        label: 'Auto Optimization',
+        icon: 'Flame',
+        path: '/auto-optimization'
+      },
+      {
         id: 'dns-recommendation',
         label: 'DNS Recommendation',
         icon: 'Sparkles',
