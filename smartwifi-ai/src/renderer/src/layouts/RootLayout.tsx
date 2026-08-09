@@ -136,7 +136,13 @@ const navigationSections: NavigationSection[] = [
         path: '/resource-monitor'
       },
       { id: 'heavy-usage', label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' },
-      { id: 'network-alerts', label: 'Network Alerts', icon: 'BellRing', path: '/network-alerts' }
+      { id: 'network-alerts', label: 'Network Alerts', icon: 'BellRing', path: '/network-alerts' },
+      {
+        id: 'notification-center',
+        label: 'Notification Center',
+        icon: 'BellRing',
+        path: '/notification-center'
+      }
     ]
   },
   {

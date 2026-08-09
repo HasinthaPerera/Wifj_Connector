@@ -144,6 +144,11 @@ export const routes: RouteConfig[] = [
     label: 'Network Alerts'
   },
   {
+    path: '/notification-center',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.NotificationCenterPage }))),
+    label: 'Notification Center'
+  },
+  {
     path: '/history',
     component: lazy(() => import('../pages').then((m) => ({ default: m.HistoryPage }))),
     label: 'History'
