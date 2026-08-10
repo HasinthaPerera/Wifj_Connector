@@ -165,6 +165,12 @@ const navigationSections: NavigationSection[] = [
         icon: 'UserCog',
         path: '/user-preferences'
       },
+      {
+        id: 'auto-refresh-settings',
+        label: 'Auto Refresh Settings',
+        icon: 'RefreshCw',
+        path: '/auto-refresh-settings'
+      },
       { id: 'about', label: 'About', icon: 'Info', path: '/about' }
     ]
   }
