@@ -164,6 +164,11 @@ export const routes: RouteConfig[] = [
     label: 'Settings'
   },
   {
+    path: '/user-preferences',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.UserPreferencesPage }))),
+    label: 'User Preferences'
+  },
+  {
     path: '/about',
     component: lazy(() => import('../pages').then((m) => ({ default: m.AboutPage }))),
     label: 'About'
