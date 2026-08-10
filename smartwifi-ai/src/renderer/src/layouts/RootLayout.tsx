@@ -29,7 +29,8 @@ import {
   Sparkles,
   RefreshCw,
   ZapOff,
-  RotateCcw
+  RotateCcw,
+  UserCog
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -158,6 +159,12 @@ const navigationSections: NavigationSection[] = [
     title: 'Application',
     items: [
       { id: 'settings', label: 'Settings', icon: 'Settings', path: '/settings' },
+      {
+        id: 'user-preferences',
+        label: 'User Preferences',
+        icon: 'UserCog',
+        path: '/user-preferences'
+      },
       { id: 'about', label: 'About', icon: 'Info', path: '/about' }
     ]
   }
@@ -189,7 +196,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Sparkles,
   RefreshCw,
   ZapOff,
-  RotateCcw
+  RotateCcw,
+  UserCog
 }
 
 /* ─────────────────────────────────────────────────────────────
