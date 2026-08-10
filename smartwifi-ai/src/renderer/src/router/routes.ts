@@ -169,6 +169,11 @@ export const routes: RouteConfig[] = [
     label: 'User Preferences'
   },
   {
+    path: '/auto-refresh-settings',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.AutoRefreshSettingsPage }))),
+    label: 'Auto Refresh Settings'
+  },
+  {
     path: '/about',
     component: lazy(() => import('../pages').then((m) => ({ default: m.AboutPage }))),
     label: 'About'
