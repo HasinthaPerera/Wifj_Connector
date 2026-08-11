@@ -30,7 +30,8 @@ import {
   RefreshCw,
   ZapOff,
   RotateCcw,
-  UserCog
+  UserCog,
+  Terminal
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -151,7 +152,8 @@ const navigationSections: NavigationSection[] = [
     title: 'Analytics',
     items: [
       { id: 'history', label: 'History', icon: 'History', path: '/history' },
-      { id: 'reports', label: 'Reports', icon: 'FileText', path: '/reports' }
+      { id: 'reports', label: 'Reports', icon: 'FileText', path: '/reports' },
+      { id: 'logging-system', label: 'System Logs', icon: 'Terminal', path: '/logging-system' }
     ]
   },
   {
@@ -209,7 +211,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   RefreshCw,
   ZapOff,
   RotateCcw,
-  UserCog
+  UserCog,
+  Terminal
 }
 
 /* ─────────────────────────────────────────────────────────────
