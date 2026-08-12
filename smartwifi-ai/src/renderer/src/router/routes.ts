@@ -164,6 +164,11 @@ export const routes: RouteConfig[] = [
     label: 'System Logs'
   },
   {
+    path: '/debug-console',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.DebugConsolePage }))),
+    label: 'Debug Console'
+  },
+  {
     path: '/settings',
     component: lazy(() => import('../pages').then((m) => ({ default: m.SettingsPage }))),
     label: 'Settings'
