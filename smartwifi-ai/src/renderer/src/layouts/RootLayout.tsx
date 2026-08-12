@@ -31,7 +31,8 @@ import {
   ZapOff,
   RotateCcw,
   UserCog,
-  Terminal
+  Terminal,
+  Bug
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -153,7 +154,8 @@ const navigationSections: NavigationSection[] = [
     items: [
       { id: 'history', label: 'History', icon: 'History', path: '/history' },
       { id: 'reports', label: 'Reports', icon: 'FileText', path: '/reports' },
-      { id: 'logging-system', label: 'System Logs', icon: 'Terminal', path: '/logging-system' }
+      { id: 'logging-system', label: 'System Logs', icon: 'Terminal', path: '/logging-system' },
+      { id: 'debug-console', label: 'Debug Console', icon: 'Bug', path: '/debug-console' }
     ]
   },
   {
@@ -212,7 +214,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   ZapOff,
   RotateCcw,
   UserCog,
-  Terminal
+  Terminal,
+  Bug
 }
 
 /* ─────────────────────────────────────────────────────────────
