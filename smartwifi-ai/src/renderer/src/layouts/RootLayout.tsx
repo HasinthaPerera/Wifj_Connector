@@ -32,7 +32,8 @@ import {
   RotateCcw,
   UserCog,
   Terminal,
-  Bug
+  Bug,
+  Zap
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -113,6 +114,12 @@ const navigationSections: NavigationSection[] = [
         label: 'Auto Optimization',
         icon: 'Flame',
         path: '/auto-optimization'
+      },
+      {
+        id: 'performance-optimization',
+        label: 'Performance Optimization',
+        icon: 'Zap',
+        path: '/performance-optimization'
       },
       {
         id: 'dns-recommendation',
@@ -215,7 +222,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   RotateCcw,
   UserCog,
   Terminal,
-  Bug
+  Bug,
+  Zap
 }
 
 /* ─────────────────────────────────────────────────────────────
