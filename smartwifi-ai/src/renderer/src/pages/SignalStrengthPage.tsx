@@ -10,12 +10,13 @@ import {
   Skeleton
 } from '@/components/ui'
 import { useWifi } from '@/context'
+import { evaluateSignalGrade } from '@/utils'
 
 interface SignalReading {
   timestamp: string
   percent: number
   dbm: number
-  quality: 'Excellent' | 'Good' | 'Fair' | 'Poor'
+  quality: string
 }
 
 /**
@@ -31,43 +32,8 @@ export function SignalStrengthPage(): React.JSX.Element {
   const percent = status.signal
   const dbm = Math.round(percent / 2 - 100)
 
-  // Resolve status labeling
-  const getQuality = (dbmVal: number): 'Excellent' | 'Good' | 'Fair' | 'Poor' => {
-    if (dbmVal >= -60) return 'Excellent'
-    if (dbmVal >= -70) return 'Good'
-    if (dbmVal >= -80) return 'Fair'
-    return 'Poor'
-  }
-
-  const getQualityColor = (quality: 'Excellent' | 'Good' | 'Fair' | 'Poor'): string => {
-    switch (quality) {
-      case 'Excellent':
-        return 'text-accent-500 bg-accent-500/10 border-accent-200 dark:border-accent-900/30'
-      case 'Good':
-        return 'text-primary-500 bg-primary-500/10 border-primary-200 dark:border-primary-900/30'
-      case 'Fair':
-        return 'text-warning-500 bg-warning-500/10 border-warning-200 dark:border-warning-900/30'
-      case 'Poor':
-        return 'text-danger-500 bg-danger-500/10 border-danger-200 dark:border-danger-900/30'
-    }
-  }
-
-  const getQualityBarColor = (
-    quality: 'Excellent' | 'Good' | 'Fair' | 'Poor'
-  ): 'accent' | 'primary' | 'warning' | 'danger' => {
-    switch (quality) {
-      case 'Excellent':
-        return 'accent'
-      case 'Good':
-        return 'primary'
-      case 'Fair':
-        return 'warning'
-      case 'Poor':
-        return 'danger'
-    }
-  }
-
-  const currentQuality = getQuality(dbm)
+  // Evaluate quality via centralized formatters
+  const signalGrade = evaluateSignalGrade(percent)
 
   // Capture history on updates
   useEffect(() => {
@@ -82,7 +48,7 @@ export function SignalStrengthPage(): React.JSX.Element {
       timestamp: now,
       percent,
       dbm,
-      quality: getQuality(dbm)
+      quality: signalGrade.label
     }
 
     const timer = setTimeout(() => {
@@ -152,24 +118,14 @@ export function SignalStrengthPage(): React.JSX.Element {
                   </span>
                 </div>
 
-                <Badge
-                  variant={
-                    currentQuality === 'Poor'
-                      ? 'danger'
-                      : currentQuality === 'Fair'
-                        ? 'warning'
-                        : 'accent'
-                  }
-                  className={`border ${getQualityColor(currentQuality)}`}
-                  size="md"
-                >
-                  {currentQuality.toUpperCase()} LINK QUALITY
+                <Badge variant={signalGrade.variant} size="md">
+                  {signalGrade.label.toUpperCase()} LINK QUALITY ({signalGrade.grade})
                 </Badge>
 
                 <div className="w-full px-6 pt-2">
                   <ProgressBar
                     value={percent}
-                    variant={getQualityBarColor(currentQuality)}
+                    variant={signalGrade.variant === 'default' ? 'danger' : signalGrade.variant}
                     size="md"
                     showLabel={false}
                   />
