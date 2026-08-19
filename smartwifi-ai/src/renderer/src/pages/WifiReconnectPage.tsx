@@ -144,7 +144,7 @@ export function WifiReconnectPage(): React.JSX.Element {
   }, [])
 
   useEffect(() => {
-    fetchWifiDetails()
+    void fetchWifiDetails()
   }, [fetchWifiDetails])
 
   /* ── 2. Scan APs Handler ── */

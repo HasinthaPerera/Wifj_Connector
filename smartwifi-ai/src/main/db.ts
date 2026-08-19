@@ -2,9 +2,15 @@ import sqlite3 from 'sqlite3'
 import { app } from 'electron'
 import { join } from 'path'
 
-// Get the user data path to store the DB file
-const dbPath = join(app.getPath('userData'), 'smartwifi.db')
-let db: sqlite3.Database
+let db: sqlite3.Database | null = null
+
+function getDbPath(): string {
+  try {
+    return join(app.getPath('userData'), 'smartwifi.db')
+  } catch {
+    return join(process.cwd(), 'smartwifi.db')
+  }
+}
 
 export interface SpeedTestResult {
   id?: number
@@ -16,14 +22,16 @@ export interface SpeedTestResult {
   server: string
 }
 
-export function initDb(): void {
+export function initDb(): sqlite3.Database {
+  if (db) return db
+  const dbPath = getDbPath()
   db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
       console.error('Failed to open SQLite database:', err.message)
     } else {
       console.log('Connected to SQLite database at', dbPath)
       // Create tables if they don't exist
-      db.run(
+      db?.run(
         `CREATE TABLE IF NOT EXISTS speed_tests (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           timestamp TEXT NOT NULL,
@@ -39,15 +47,24 @@ export function initDb(): void {
       )
     }
   })
+  return db
+}
+
+function ensureDb(): sqlite3.Database {
+  if (!db) {
+    return initDb()
+  }
+  return db
 }
 
 export function insertSpeedTest(result: SpeedTestResult): Promise<number> {
   return new Promise((resolve, reject) => {
+    const activeDb = ensureDb()
     const query = `
       INSERT INTO speed_tests (timestamp, downloadMbps, uploadMbps, pingMs, jitterMs, server)
       VALUES (?, ?, ?, ?, ?, ?)
     `
-    db.run(
+    activeDb.run(
       query,
       [
         result.timestamp,
@@ -67,9 +84,10 @@ export function insertSpeedTest(result: SpeedTestResult): Promise<number> {
 
 export function getSpeedTests(): Promise<SpeedTestResult[]> {
   return new Promise((resolve, reject) => {
+    const activeDb = ensureDb()
     const query =
       'SELECT id, timestamp, downloadMbps, uploadMbps, pingMs, jitterMs, server FROM speed_tests ORDER BY timestamp DESC'
-    db.all(query, [], (err, rows) => {
+    activeDb.all(query, [], (err, rows) => {
       if (err) reject(err)
       else resolve(rows as SpeedTestResult[])
     })
@@ -78,7 +96,8 @@ export function getSpeedTests(): Promise<SpeedTestResult[]> {
 
 export function clearSpeedTests(): Promise<void> {
   return new Promise((resolve, reject) => {
-    db.run('DELETE FROM speed_tests', (err) => {
+    const activeDb = ensureDb()
+    activeDb.run('DELETE FROM speed_tests', (err) => {
       if (err) reject(err)
       else resolve()
     })
@@ -87,7 +106,8 @@ export function clearSpeedTests(): Promise<void> {
 
 export function deleteSpeedTest(id: number): Promise<void> {
   return new Promise((resolve, reject) => {
-    db.run('DELETE FROM speed_tests WHERE id = ?', [id], (err) => {
+    const activeDb = ensureDb()
+    activeDb.run('DELETE FROM speed_tests WHERE id = ?', [id], (err) => {
       if (err) reject(err)
       else resolve()
     })
