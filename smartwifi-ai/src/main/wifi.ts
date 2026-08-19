@@ -89,7 +89,21 @@ function parseInterfaces(stdout: string): WifiAdapterDetails | null {
     return null
   }
 
-  return details as WifiAdapterDetails
+  return {
+    name: details.name || 'Wi-Fi',
+    description: details.description || 'Wireless Adapter',
+    physicalAddress: details.physicalAddress || '00:00:00:00:00:00',
+    state: details.state || 'disconnected',
+    ssid: details.ssid || '[Not Connected]',
+    bssid: details.bssid || '00:00:00:00:00:00',
+    radioType: details.radioType || '802.11ax',
+    authentication: details.authentication || 'WPA2-Personal',
+    cipher: details.cipher || 'CCMP',
+    channel: details.channel ?? 0,
+    receiveRate: details.receiveRate ?? 0,
+    transmitRate: details.transmitRate ?? 0,
+    signal: details.signal ?? 0
+  }
 }
 
 /**
