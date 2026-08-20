@@ -2,6 +2,7 @@ appId: com.smartwifi.ai
 productName: SmartWiFi AI
 directories:
   buildResources: build
+  output: dist
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -12,13 +13,22 @@ files:
 asarUnpack:
   - resources/**
 win:
+  target:
+    - nsis
+  icon: build/icon.ico
   executableName: smartwifi-ai
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+  artifactName: ${name}-${version}-setup.${ext}
 mac:
+  target:
+    - dmg
+  icon: build/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -31,9 +41,9 @@ dmg:
 linux:
   target:
     - AppImage
-    - snap
     - deb
-  maintainer: electronjs.org
+  icon: build/icon.png
+  maintainer: HasinthaPerera
   category: Network
 appImage:
   artifactName: ${name}-${version}.${ext}
