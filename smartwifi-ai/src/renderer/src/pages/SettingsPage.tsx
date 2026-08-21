@@ -4,12 +4,11 @@ import {
   Shield,
   Bell,
   RefreshCw,
-  Palette,
   Database,
   Clock,
   ChevronDown
 } from 'lucide-react'
-import { Card, CardHeader, CardContent, Button, ThemeManagerPanel } from '@/components/ui'
+import { Card, CardHeader, CardContent, Button } from '@/components/ui'
 
 /* ─────────────────────────────────────────────────────────────
    Local toggle for general preferences
@@ -138,30 +137,16 @@ export function SettingsPage(): React.JSX.Element {
   ]
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-4xl">
       {/* Page header */}
       <div>
         <h1 className="text-xl font-bold text-[var(--text-primary)]">Application Settings</h1>
         <p className="text-xs text-[var(--text-secondary)] mt-1">
-          Manage appearance, alerts, refresh behaviour, and data retention
+          Manage system alerts, monitoring frequency, auto-refresh behaviour, and data retention
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* ── Appearance & Theme ─────────────────────────── */}
-        <Card padding="md">
-          <CardHeader
-            title="Appearance &amp; Theme"
-            subtitle="Customise look, feel, and accent colour"
-            icon={<Palette size={15} />}
-          />
-          <CardContent>
-            <ThemeManagerPanel inline />
-          </CardContent>
-        </Card>
-
-        {/* ── Right column ───────────────────────────────── */}
-        <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
           {/* General Preferences */}
           <Card padding="md">
             <CardHeader
@@ -247,7 +232,6 @@ export function SettingsPage(): React.JSX.Element {
               </Button>
             </CardContent>
           </Card>
-        </div>
       </div>
     </div>
   )
