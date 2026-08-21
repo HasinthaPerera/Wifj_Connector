@@ -29,7 +29,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'SmartWiFi AI',
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

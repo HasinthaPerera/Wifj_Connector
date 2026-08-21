@@ -18,7 +18,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 
-import { useTheme, useWifi } from '@/context'
+import { useTheme, useWifi, useNotifications } from '@/context'
 import { ThemeManagerDropdown } from '@/components/ui/ThemeManager'
 import type { AppNotification } from '@/types'
 
@@ -47,44 +47,7 @@ export interface TopBarProps {
   signalStrength?: number
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Static demo notification seed (replaced by real IPC data later)
-───────────────────────────────────────────────────────────── */
 
-const DEMO_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: 'n1',
-    type: 'warning',
-    title: 'Signal Degradation',
-    message: 'Wi-Fi signal dropped below 50% in the last 5 minutes.',
-    timestamp: Date.now() - 1000 * 60 * 3,
-    read: false
-  },
-  {
-    id: 'n2',
-    type: 'info',
-    title: 'Speed Test Available',
-    message: 'A new server in your region is available for speed testing.',
-    timestamp: Date.now() - 1000 * 60 * 12,
-    read: false
-  },
-  {
-    id: 'n3',
-    type: 'success',
-    title: 'Optimization Applied',
-    message: 'DNS configuration optimized. Latency improved by 18 ms.',
-    timestamp: Date.now() - 1000 * 60 * 60,
-    read: true
-  },
-  {
-    id: 'n4',
-    type: 'error',
-    title: 'Packet Loss Detected',
-    message: '12% packet loss detected on gateway 192.168.1.1.',
-    timestamp: Date.now() - 1000 * 60 * 90,
-    read: true
-  }
-]
 
 /* ─────────────────────────────────────────────────────────────
    Signal bars sub-component
@@ -340,15 +303,13 @@ function TopBar({
 }: TopBarProps): React.JSX.Element {
   const { resolvedTheme } = useTheme()
   const { status, refreshStatus } = useWifi()
+  const { notifications, unreadCount, markAllAsRead, dismissNotification } = useNotifications()
 
   const [notifOpen, setNotifOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
-  const [notifications, setNotifications] = useState<AppNotification[]>(DEMO_NOTIFICATIONS)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const themeRef = useRef<HTMLDivElement>(null)
-
-  const unreadCount = notifications.filter((n) => !n.read).length
 
   /* Close panel on outside click */
   useEffect(() => {
@@ -373,12 +334,15 @@ function TopBar({
   }, [notifOpen])
 
   const handleMarkAllRead = useCallback((): void => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }, [])
+    markAllAsRead()
+  }, [markAllAsRead])
 
-  const handleDismiss = useCallback((id: string): void => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
-  }, [])
+  const handleDismiss = useCallback(
+    (id: string): void => {
+      dismissNotification(id)
+    },
+    [dismissNotification]
+  )
 
   const handleRefresh = useCallback((): void => {
     setIsRefreshing(true)
