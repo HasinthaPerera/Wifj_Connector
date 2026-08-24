@@ -199,5 +199,10 @@ export const routes: RouteConfig[] = [
     path: '/about',
     component: lazy(() => import('../pages').then((m) => ({ default: m.AboutPage }))),
     label: 'About'
+  },
+  {
+    path: '/help-center',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.HelpCenterPage }))),
+    label: 'Help Center'
   }
 ]

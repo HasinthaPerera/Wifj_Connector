@@ -33,7 +33,8 @@ import {
   UserCog,
   Terminal,
   Bug,
-  Zap
+  Zap,
+  HelpCircle
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -188,7 +189,8 @@ const navigationSections: NavigationSection[] = [
         icon: 'Palette',
         path: '/theme-preferences'
       },
-      { id: 'about', label: 'About', icon: 'Info', path: '/about' }
+      { id: 'about', label: 'About', icon: 'Info', path: '/about' },
+      { id: 'help-center', label: 'Help Center', icon: 'HelpCircle', path: '/help-center' }
     ]
   }
 ]
@@ -223,7 +225,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   UserCog,
   Terminal,
   Bug,
-  Zap
+  Zap,
+  HelpCircle
 }
 
 /* ─────────────────────────────────────────────────────────────
