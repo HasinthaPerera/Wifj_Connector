@@ -395,5 +395,5 @@ Please ensure your changes pass `npm run typecheck` and `npm run test` before su
 ---
 
 <p align="center">
-  <strong>SmartWiFi AI</strong> — Built with ❤️ by <a href="https://github.com/HasinthaPerera">Hasintha Perera</a>
+  <strong>SmartWiFi AI</strong> — Built by <a href="https://github.com/HasinthaPerera">Hasintha Perera</a>
 </p>
