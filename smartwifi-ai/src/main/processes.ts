@@ -60,10 +60,12 @@ interface RawRow {
 }
 
 function parseJsonRows(stdout: string): RawRow[] {
+  if (!stdout || !stdout.trim()) return []
   try {
-    // PowerShell outputs JSON array
+    // PowerShell outputs JSON array or single object when only 1 item matches
     const parsed: unknown = JSON.parse(stdout.trim())
     if (Array.isArray(parsed)) return parsed as RawRow[]
+    if (parsed && typeof parsed === 'object') return [parsed as RawRow]
   } catch {
     // noop — fall through to simulated
   }

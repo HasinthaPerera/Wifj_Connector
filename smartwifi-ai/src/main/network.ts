@@ -35,6 +35,7 @@ function resolveAdapterType(header: string): NetworkInterfaceDetails['type'] {
  * Parses stdout from Windows `ipconfig /all`
  */
 function parseIpconfigAll(stdout: string): NetworkInterfaceDetails[] {
+  if (!stdout) return []
   // Split into adapter blocks (non-indented header followed by indented details)
   const blocks = stdout.split(/\r?\n(?=[^\s])/)
   const interfaces: NetworkInterfaceDetails[] = []
@@ -106,7 +107,7 @@ function parseIpconfigAll(stdout: string): NetworkInterfaceDetails[] {
             if (value) details.dnsServers?.push(value)
             break
         }
-      } else if (line.trim() && !line.includes(':') && lastKey === 'dns-servers') {
+      } else if (line.trim() && !line.includes(':') && lastKey === 'dns servers') {
         // Handle secondary DNS servers on subsequent lines
         const dnsVal = line.trim()
         if (dnsVal && details.dnsServers) {

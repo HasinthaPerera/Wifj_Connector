@@ -29,6 +29,18 @@ declare global {
           bssid: string
         }>
       >
+      reconnectWifi: (
+        interfaceName?: string,
+        ssid?: string
+      ) => Promise<{
+        success: boolean
+        message: string
+        output: string
+        interfaceName: string
+        ssid: string
+        timestamp: string
+        isSimulated: boolean
+      }>
       getNetworkConfig: () => Promise<
         Array<{
           name: string
@@ -115,6 +127,75 @@ declare global {
         }) => Promise<number>
         clearSpeedTests: () => Promise<void>
         deleteSpeedTest: (id: number) => Promise<void>
+      }
+      optimization: {
+        flushDns: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        releaseLease: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        renewLease: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        resetTcpStack: () => Promise<{
+          success: boolean
+          message: string
+          output?: string
+          timestamp: string
+        }>
+        benchmarkDns: () => Promise<
+          Array<{
+            id: string
+            name: string
+            primaryDns: string
+            secondaryDns: string
+            latencyMs: number
+            status: 'fast' | 'average' | 'slow'
+          }>
+        >
+        autoOptimize: (preset?: 'gaming' | 'streaming' | 'work' | 'balanced') => Promise<{
+          preset: string
+          scoreBefore: number
+          scoreAfter: number
+          latencyBeforeMs: number
+          latencyAfterMs: number
+          appliedActions: string[]
+          timestamp: string
+          isSimulated: boolean
+        }>
+        resolveDomain: (domain: string) => Promise<{
+          domain: string
+          addresses: string[]
+          latencyMs: number
+          resolver: string
+          timestamp: string
+          success: boolean
+          error?: string
+        }>
+        resetNetwork: (options?: {
+          resetWinsock?: boolean
+          resetTcpIp?: boolean
+          flushDns?: boolean
+          clearArp?: boolean
+          renewDhcp?: boolean
+        }) => Promise<{
+          success: boolean
+          timestamp: string
+          stepsExecuted: Array<{ step: string; success: boolean; output: string }>
+          combinedOutput: string
+          rebootRecommended: boolean
+          isSimulated: boolean
+        }>
       }
       exportCsv: (content: string) => Promise<boolean>
       exportPdf: () => Promise<boolean>

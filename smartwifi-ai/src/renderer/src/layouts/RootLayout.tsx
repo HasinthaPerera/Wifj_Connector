@@ -24,7 +24,17 @@ import {
   LayoutGrid,
   ScanLine,
   MemoryStick,
-  Flame
+  Flame,
+  BellRing,
+  Sparkles,
+  RefreshCw,
+  ZapOff,
+  RotateCcw,
+  UserCog,
+  Terminal,
+  Bug,
+  Zap,
+  HelpCircle
 } from 'lucide-react'
 import { TopBar } from '@/components/ui'
 import { useBreakpoint } from '@/hooks'
@@ -46,7 +56,22 @@ const navigationSections: NavigationSection[] = [
     items: [
       { id: 'wifi-info', label: 'Wi-Fi Info', icon: 'Wifi', path: '/wifi-info' },
       { id: 'network-info', label: 'Network Info', icon: 'Network', path: '/network-info' },
-      { id: 'speed-test', label: 'Speed Test', icon: 'Gauge', path: '/speed-test' }
+      { id: 'speed-test', label: 'Speed Test', icon: 'Gauge', path: '/speed-test' },
+      { id: 'dns-flush', label: 'DNS Flush Tool', icon: 'RefreshCw', path: '/dns-flush' },
+      { id: 'renew-ip', label: 'Renew IP Tool', icon: 'Zap', path: '/renew-ip' },
+      { id: 'release-ip', label: 'Release IP Tool', icon: 'ZapOff', path: '/release-ip' },
+      {
+        id: 'network-reset',
+        label: 'Network Reset Tool',
+        icon: 'RotateCcw',
+        path: '/network-reset'
+      },
+      {
+        id: 'wifi-reconnect',
+        label: 'Wi-Fi Reconnect Tool',
+        icon: 'RefreshCw',
+        path: '/wifi-reconnect'
+      }
     ]
   },
   {
@@ -75,19 +100,60 @@ const navigationSections: NavigationSection[] = [
     id: 'intelligence',
     title: 'Intelligence',
     items: [
-      { id: 'health-score',     label: 'Health Score',     icon: 'HeartPulse',  path: '/health-score' },
-      { id: 'health-dashboard', label: 'Health Dashboard', icon: 'LayoutGrid',  path: '/health-dashboard' },
-      { id: 'ai-diagnosis',     label: 'AI Diagnosis',     icon: 'Brain',       path: '/ai-diagnosis' },
-      { id: 'optimization',     label: 'Optimization',     icon: 'Wrench',      path: '/optimization' }
+      { id: 'health-score', label: 'Health Score', icon: 'HeartPulse', path: '/health-score' },
+      {
+        id: 'health-dashboard',
+        label: 'Health Dashboard',
+        icon: 'LayoutGrid',
+        path: '/health-dashboard'
+      },
+      { id: 'ai-diagnosis', label: 'AI Diagnosis', icon: 'Brain', path: '/ai-diagnosis' },
+      { id: 'ai-rule-engine', label: 'AI Rule Engine', icon: 'Sparkles', path: '/ai-rule-engine' },
+      { id: 'optimization', label: 'Optimization', icon: 'Wrench', path: '/optimization' },
+      {
+        id: 'auto-optimization',
+        label: 'Auto Optimization',
+        icon: 'Flame',
+        path: '/auto-optimization'
+      },
+      {
+        id: 'performance-optimization',
+        label: 'Performance Optimization',
+        icon: 'Zap',
+        path: '/performance-optimization'
+      },
+      {
+        id: 'dns-recommendation',
+        label: 'DNS Recommendation',
+        icon: 'Sparkles',
+        path: '/dns-recommendation'
+      }
     ]
   },
   {
     id: 'system',
     title: 'System',
     items: [
-      { id: 'process-scanner',  label: 'Process Scanner',  icon: 'ScanLine',    path: '/process-scanner' },
-      { id: 'resource-monitor', label: 'Resource Monitor', icon: 'MemoryStick', path: '/resource-monitor' },
-      { id: 'heavy-usage',      label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' }
+      {
+        id: 'process-scanner',
+        label: 'Process Scanner',
+        icon: 'ScanLine',
+        path: '/process-scanner'
+      },
+      {
+        id: 'resource-monitor',
+        label: 'Resource Monitor',
+        icon: 'MemoryStick',
+        path: '/resource-monitor'
+      },
+      { id: 'heavy-usage', label: 'Heavy Usage Detection', icon: 'Flame', path: '/heavy-usage' },
+      { id: 'network-alerts', label: 'Network Alerts', icon: 'BellRing', path: '/network-alerts' },
+      {
+        id: 'notification-center',
+        label: 'Notification Center',
+        icon: 'BellRing',
+        path: '/notification-center'
+      }
     ]
   },
   {
@@ -95,7 +161,9 @@ const navigationSections: NavigationSection[] = [
     title: 'Analytics',
     items: [
       { id: 'history', label: 'History', icon: 'History', path: '/history' },
-      { id: 'reports', label: 'Reports', icon: 'FileText', path: '/reports' }
+      { id: 'reports', label: 'Reports', icon: 'FileText', path: '/reports' },
+      { id: 'logging-system', label: 'System Logs', icon: 'Terminal', path: '/logging-system' },
+      { id: 'debug-console', label: 'Debug Console', icon: 'Bug', path: '/debug-console' }
     ]
   },
   {
@@ -103,7 +171,26 @@ const navigationSections: NavigationSection[] = [
     title: 'Application',
     items: [
       { id: 'settings', label: 'Settings', icon: 'Settings', path: '/settings' },
-      { id: 'about', label: 'About', icon: 'Info', path: '/about' }
+      {
+        id: 'user-preferences',
+        label: 'User Preferences',
+        icon: 'UserCog',
+        path: '/user-preferences'
+      },
+      {
+        id: 'auto-refresh-settings',
+        label: 'Auto Refresh Settings',
+        icon: 'RefreshCw',
+        path: '/auto-refresh-settings'
+      },
+      {
+        id: 'theme-preferences',
+        label: 'Theme Preferences',
+        icon: 'Palette',
+        path: '/theme-preferences'
+      },
+      { id: 'about', label: 'About', icon: 'Info', path: '/about' },
+      { id: 'help-center', label: 'Help Center', icon: 'HelpCircle', path: '/help-center' }
     ]
   }
 ]
@@ -129,7 +216,17 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   LayoutGrid,
   ScanLine,
   MemoryStick,
-  Flame
+  Flame,
+  BellRing,
+  Sparkles,
+  RefreshCw,
+  ZapOff,
+  RotateCcw,
+  UserCog,
+  Terminal,
+  Bug,
+  Zap,
+  HelpCircle
 }
 
 /* ─────────────────────────────────────────────────────────────

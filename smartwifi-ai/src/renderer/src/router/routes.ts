@@ -79,9 +79,56 @@ export const routes: RouteConfig[] = [
     label: 'AI Diagnosis'
   },
   {
+    path: '/ai-rule-engine',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.AiRuleEnginePage }))),
+    label: 'AI Rule Engine'
+  },
+  {
     path: '/optimization',
     component: lazy(() => import('../pages').then((m) => ({ default: m.OptimizationPage }))),
     label: 'Optimization'
+  },
+  {
+    path: '/auto-optimization',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.AutoOptimizationPage }))),
+    label: 'Automatic Optimization'
+  },
+  {
+    path: '/performance-optimization',
+    component: lazy(() =>
+      import('../pages').then((m) => ({ default: m.PerformanceOptimizationPage }))
+    ),
+    label: 'Performance Optimization'
+  },
+  {
+    path: '/dns-recommendation',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.DnsRecommendationPage }))),
+    label: 'DNS Recommendation'
+  },
+  {
+    path: '/dns-flush',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.DnsFlushPage }))),
+    label: 'DNS Flush Tool'
+  },
+  {
+    path: '/renew-ip',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.RenewIpPage }))),
+    label: 'Renew IP Tool'
+  },
+  {
+    path: '/release-ip',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.ReleaseIpPage }))),
+    label: 'Release IP Tool'
+  },
+  {
+    path: '/network-reset',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.NetworkResetPage }))),
+    label: 'Network Reset Tool'
+  },
+  {
+    path: '/wifi-reconnect',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.WifiReconnectPage }))),
+    label: 'Wi-Fi Reconnect Tool'
   },
   {
     path: '/process-scanner',
@@ -99,6 +146,16 @@ export const routes: RouteConfig[] = [
     label: 'Heavy Usage Detection'
   },
   {
+    path: '/network-alerts',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.NetworkAlertsPage }))),
+    label: 'Network Alerts'
+  },
+  {
+    path: '/notification-center',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.NotificationCenterPage }))),
+    label: 'Notification Center'
+  },
+  {
     path: '/history',
     component: lazy(() => import('../pages').then((m) => ({ default: m.HistoryPage }))),
     label: 'History'
@@ -109,13 +166,43 @@ export const routes: RouteConfig[] = [
     label: 'Reports'
   },
   {
+    path: '/logging-system',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.LoggingSystemPage }))),
+    label: 'System Logs'
+  },
+  {
+    path: '/debug-console',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.DebugConsolePage }))),
+    label: 'Debug Console'
+  },
+  {
     path: '/settings',
     component: lazy(() => import('../pages').then((m) => ({ default: m.SettingsPage }))),
     label: 'Settings'
   },
   {
+    path: '/user-preferences',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.UserPreferencesPage }))),
+    label: 'User Preferences'
+  },
+  {
+    path: '/auto-refresh-settings',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.AutoRefreshSettingsPage }))),
+    label: 'Auto Refresh Settings'
+  },
+  {
+    path: '/theme-preferences',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.ThemePreferencesPage }))),
+    label: 'Theme Preferences'
+  },
+  {
     path: '/about',
     component: lazy(() => import('../pages').then((m) => ({ default: m.AboutPage }))),
     label: 'About'
+  },
+  {
+    path: '/help-center',
+    component: lazy(() => import('../pages').then((m) => ({ default: m.HelpCenterPage }))),
+    label: 'Help Center'
   }
 ]
