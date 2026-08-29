@@ -1,8 +1,9 @@
 import React from 'react'
+import { formatSpeedUnit } from '@/utils/speedTestRunner'
 
 interface SpeedometerGaugeProps {
   value: number // Live speed in Mbps
-  maxMbps?: number // Scale maximum (default 100 or 1000)
+  maxMbps?: number // Scale maximum (default 500)
   phase: 'idle' | 'ping' | 'download' | 'upload' | 'completed'
   progress: number
   pingMs?: number
@@ -11,7 +12,8 @@ interface SpeedometerGaugeProps {
 
 /**
  * Ookla-Style Circular Speedometer Gauge with sweeping needle,
- * glowing progress arc, dynamic tick marks, and real-time phase indicator.
+ * glowing progress arc, dynamic tick marks, auto-unit formatting (Kbps / Mbps / Gbps),
+ * and real-time phase indicator.
  */
 export function SpeedometerGauge({
   value,
@@ -19,9 +21,13 @@ export function SpeedometerGauge({
   phase,
   progress
 }: SpeedometerGaugeProps): React.JSX.Element {
+  // Auto format unit (Kbps, Mbps, Gbps)
+  const formatted = formatSpeedUnit(value)
+
   // Map value to gauge angle (-120deg to +120deg = 240deg total sweep)
   const normalizedSpeed = Math.min(Math.max(value, 0), maxMbps)
-  // Logarithmic scale mapping for better needle resolution at lower/medium speeds (0 to 100Mbps takes ~60% of dial)
+
+  // Logarithmic scale mapping so needle moves smoothly across all speeds
   const speedRatio =
     normalizedSpeed === 0
       ? 0
@@ -33,13 +39,13 @@ export function SpeedometerGauge({
   const getPhaseColor = () => {
     switch (phase) {
       case 'ping':
-        return '#eab308' // Amber / Warning
+        return '#eab308' // Amber
       case 'download':
-        return '#10b981' // Emerald / Primary
+        return '#10b981' // Emerald
       case 'upload':
-        return '#06b6d4' // Cyan / Accent
+        return '#06b6d4' // Cyan
       case 'completed':
-        return '#6366f1' // Indigo / Primary
+        return '#6366f1' // Indigo
       default:
         return 'var(--text-muted)'
     }
@@ -55,12 +61,6 @@ export function SpeedometerGauge({
         aria-label="Speedometer Gauge"
       >
         <defs>
-          {/* Background Track Gradient */}
-          <linearGradient id="gaugeTrackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0.01)" />
-          </linearGradient>
-
           {/* Active Speed Arc Gradient */}
           <linearGradient id="speedArcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10b981" />
@@ -90,7 +90,7 @@ export function SpeedometerGauge({
           opacity="0.6"
         />
 
-        {/* Background Track Arc (240 degree sweep from 150deg to 390deg) */}
+        {/* Background Track Arc */}
         <path
           d="M 46.08 210 A 120 120 0 1 1 253.92 210"
           fill="none"
@@ -171,13 +171,11 @@ export function SpeedometerGauge({
           }}
           filter="url(#needleGlow)"
         >
-          {/* Needle Shaft */}
           <polygon points="146,150 154,150 151,46 149,46" fill={phaseColor} />
-          {/* Needle Tip Circle */}
           <circle cx="150" cy="45" r="3" fill="#ffffff" />
         </g>
 
-        {/* Live Digital Display in Dial Center */}
+        {/* Live Digital Display with Auto-Unit Formatting */}
         <text
           x="150"
           y="188"
@@ -187,7 +185,7 @@ export function SpeedometerGauge({
           textAnchor="middle"
           className="font-mono tracking-tight"
         >
-          {value > 0 ? value.toFixed(1) : '0.0'}
+          {formatted.value}
         </text>
         <text
           x="150"
@@ -198,7 +196,7 @@ export function SpeedometerGauge({
           textAnchor="middle"
           className="uppercase tracking-widest"
         >
-          Mbps
+          {formatted.unit}
         </text>
       </svg>
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Gauge, Play, ArrowDown, ArrowUp, Activity, Server, RefreshCw, Trash2 } from 'lucide-react'
+import { Gauge, Play, ArrowDown, ArrowUp, Activity, Server, RefreshCw, Trash2, Info } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, ProgressBar } from '@/components/ui'
 import { SpeedometerGauge } from '@/components/SpeedometerGauge'
-import { executeRealSpeedTest, SpeedTestFinalResult } from '@/utils/speedTestRunner'
+import { executeRealSpeedTest, formatSpeedUnit, SpeedTestFinalResult } from '@/utils/speedTestRunner'
 import { useToast } from '@/context'
 
 interface TestResult {
@@ -16,9 +16,22 @@ interface TestResult {
 }
 
 /**
+ * Converts Mbps to human-readable File Transfer Speed (MB/s or KB/s).
+ * 1 Byte = 8 Bits. (e.g. 100 Mbps = 12.5 MB/s)
+ */
+function formatBytesPerSecond(mbps: number): string {
+  if (mbps <= 0) return '—'
+  const bytesPerSec = (mbps * 1_000_000) / 8
+  if (bytesPerSec >= 1_000_000) {
+    return `${(bytesPerSec / 1_000_000).toFixed(2)} MB/s`
+  }
+  return `${Math.round(bytesPerSec / 1000)} KB/s`
+}
+
+/**
  * SpeedTestPage — Real-Time Bandwidth & Latency Measurement Engine.
- * Runs Ookla-style speed tests with actual payload transfer, real-time sweeping gauge,
- * live ping/jitter detection, and persistent SQLite metric logs.
+ * Performs Ookla-style real-time internet speed tests using multi-stream binary payloads,
+ * displaying live sweeping speedometer, dual Mbps & MB/s units, and persistent SQLite log history.
  */
 export function SpeedTestPage(): React.JSX.Element {
   const { showToast } = useToast()
@@ -155,7 +168,7 @@ export function SpeedTestPage(): React.JSX.Element {
       showToast(
         'success',
         'Speed Test Complete',
-        `Download: ${result.downloadMbps} Mbps · Upload: ${result.uploadMbps} Mbps · Ping: ${result.pingMs} ms`
+        `Download: ${formatSpeedUnit(result.downloadMbps).value} ${formatSpeedUnit(result.downloadMbps).unit} · Upload: ${formatSpeedUnit(result.uploadMbps).value} ${formatSpeedUnit(result.uploadMbps).unit}`
       )
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err)
@@ -188,6 +201,13 @@ export function SpeedTestPage(): React.JSX.Element {
     }
   }, [showToast])
 
+  // Current values to display
+  const currentDlMbps = liveDownload > 0 ? liveDownload : finalResult ? finalResult.downloadMbps : 0
+  const currentUlMbps = liveUpload > 0 ? liveUpload : finalResult ? finalResult.uploadMbps : 0
+
+  const dlFormatted = formatSpeedUnit(currentDlMbps)
+  const ulFormatted = formatSpeedUnit(currentUlMbps)
+
   return (
     <div className="space-y-6">
       {/* Header Bar */}
@@ -219,6 +239,14 @@ export function SpeedTestPage(): React.JSX.Element {
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Unit explanation tip bar */}
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-xs text-[var(--text-secondary)]">
+        <Info size={16} className="text-primary-500 flex-shrink-0" />
+        <span>
+          <strong>Real Speed Metrics:</strong> Speeds are measured in <strong>Mbps</strong> (Megabits/sec, line bandwidth) and converted to <strong>MB/s</strong> (Megabytes/sec, file download speed where 8 Mbps = 1 MB/s). If your speed is below 1 Mbps, it automatically displays in <strong>Kbps</strong> (Kilobits/sec).
+        </span>
       </div>
 
       {/* Progress Bar during active test */}
@@ -261,16 +289,14 @@ export function SpeedTestPage(): React.JSX.Element {
           <CardContent className="flex flex-col items-center justify-center py-4">
             <div className="flex items-baseline gap-1">
               <span className="text-4xl font-black font-mono tracking-tight text-[var(--text-primary)]">
-                {liveDownload > 0
-                  ? liveDownload.toFixed(1)
-                  : finalResult !== null
-                    ? finalResult.downloadMbps.toFixed(1)
-                    : '—'}
+                {currentDlMbps > 0 ? dlFormatted.value : '—'}
               </span>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Mbps</span>
+              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">
+                {currentDlMbps > 0 ? dlFormatted.unit : 'Mbps'}
+              </span>
             </div>
-            <span className="text-[11px] text-[var(--text-secondary)] mt-1">
-              {testPhase === 'download' ? 'Streaming...' : 'Peak Download Speed'}
+            <span className="text-[11px] font-mono text-emerald-500 font-medium mt-1">
+              {currentDlMbps > 0 ? `≈ ${formatBytesPerSecond(currentDlMbps)}` : 'File speed'}
             </span>
           </CardContent>
           {testPhase === 'download' && (
@@ -287,16 +313,14 @@ export function SpeedTestPage(): React.JSX.Element {
           <CardContent className="flex flex-col items-center justify-center py-4">
             <div className="flex items-baseline gap-1">
               <span className="text-4xl font-black font-mono tracking-tight text-[var(--text-primary)]">
-                {liveUpload > 0
-                  ? liveUpload.toFixed(1)
-                  : finalResult !== null
-                    ? finalResult.uploadMbps.toFixed(1)
-                    : '—'}
+                {currentUlMbps > 0 ? ulFormatted.value : '—'}
               </span>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Mbps</span>
+              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">
+                {currentUlMbps > 0 ? ulFormatted.unit : 'Mbps'}
+              </span>
             </div>
-            <span className="text-[11px] text-[var(--text-secondary)] mt-1">
-              {testPhase === 'upload' ? 'Sending Payload...' : 'Peak Upload Speed'}
+            <span className="text-[11px] font-mono text-cyan-500 font-medium mt-1">
+              {currentUlMbps > 0 ? `≈ ${formatBytesPerSecond(currentUlMbps)}` : 'File speed'}
             </span>
           </CardContent>
           {testPhase === 'upload' && (
@@ -359,8 +383,8 @@ export function SpeedTestPage(): React.JSX.Element {
               <thead>
                 <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)] uppercase tracking-wider text-[10px]">
                   <th className="py-2.5 font-bold">Timestamp</th>
-                  <th className="py-2.5 font-bold">Download</th>
-                  <th className="py-2.5 font-bold">Upload</th>
+                  <th className="py-2.5 font-bold">Download (Mbps / MB/s)</th>
+                  <th className="py-2.5 font-bold">Upload (Mbps / MB/s)</th>
                   <th className="py-2.5 font-bold">Ping / Jitter</th>
                   <th className="py-2.5 font-bold">Server Node</th>
                 </tr>
@@ -373,26 +397,36 @@ export function SpeedTestPage(): React.JSX.Element {
                     </td>
                   </tr>
                 ) : (
-                  history.map((item, idx) => (
-                    <tr
-                      key={item.id || idx}
-                      className="border-b border-[var(--border-color)]/50 last:border-0 hover:bg-surface-50/50 dark:hover:bg-surface-800/30 transition-colors"
-                    >
-                      <td className="py-3 font-medium text-[var(--text-primary)]">{item.timestamp}</td>
-                      <td className="py-3 font-semibold font-mono text-emerald-500">
-                        {item.downloadMbps.toFixed(1)} Mbps
-                      </td>
-                      <td className="py-3 font-semibold font-mono text-cyan-500">
-                        {item.uploadMbps.toFixed(1)} Mbps
-                      </td>
-                      <td className="py-3 font-mono text-[var(--text-secondary)]">
-                        {item.pingMs} ms / {item.jitterMs} ms
-                      </td>
-                      <td className="py-3 text-[var(--text-secondary)] truncate max-w-[200px]">
-                        {item.server}
-                      </td>
-                    </tr>
-                  ))
+                  history.map((item, idx) => {
+                    const dlFmt = formatSpeedUnit(item.downloadMbps)
+                    const ulFmt = formatSpeedUnit(item.uploadMbps)
+                    return (
+                      <tr
+                        key={item.id || idx}
+                        className="border-b border-[var(--border-color)]/50 last:border-0 hover:bg-surface-50/50 dark:hover:bg-surface-800/30 transition-colors"
+                      >
+                        <td className="py-3 font-medium text-[var(--text-primary)]">{item.timestamp}</td>
+                        <td className="py-3 font-semibold font-mono text-emerald-500">
+                          {dlFmt.value} {dlFmt.unit}{' '}
+                          <span className="text-[10px] text-[var(--text-muted)] font-normal">
+                            ({formatBytesPerSecond(item.downloadMbps)})
+                          </span>
+                        </td>
+                        <td className="py-3 font-semibold font-mono text-cyan-500">
+                          {ulFmt.value} {ulFmt.unit}{' '}
+                          <span className="text-[10px] text-[var(--text-muted)] font-normal">
+                            ({formatBytesPerSecond(item.uploadMbps)})
+                          </span>
+                        </td>
+                        <td className="py-3 font-mono text-[var(--text-secondary)]">
+                          {item.pingMs} ms / {item.jitterMs} ms
+                        </td>
+                        <td className="py-3 text-[var(--text-secondary)] truncate max-w-[200px]">
+                          {item.server}
+                        </td>
+                      </tr>
+                    )
+                  })
                 )}
               </tbody>
             </table>
