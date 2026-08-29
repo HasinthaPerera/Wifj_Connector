@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="#-screenshots">Screenshots</a> •
   <a href="#-key-features">Features</a> •
   <a href="#-technology-stack">Stack</a> •
   <a href="#-getting-started">Setup</a> •
@@ -23,6 +24,27 @@
 SmartWiFi AI is a production-quality, cross-platform desktop application for **Windows**, **macOS**, and **Linux** that provides real-time wireless telemetry, intelligent diagnostics, and automated network optimization — all running 100% locally on your device with zero cloud dependencies.
 
 Built with **Electron 39**, **React 19**, **Vite 7**, **Tailwind CSS v4**, and **TypeScript 5.9**, the application features a premium dark/light theming system with 8 accent color palettes, animated splash screen, and over 35 dedicated feature pages.
+
+---
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="screenshots/dashboard.png" alt="Dashboard — real-time network overview with stat cards, health gauge, and latency chart" />
+      <br />
+      <strong>Dashboard</strong><br />
+      <sub>Real-time network overview with stat cards, health gauge, and latency chart</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="screenshots/speed-test.png" alt="Speed Test — download/upload throughput measurement with circular gauge and history" />
+      <br />
+      <strong>Speed Test</strong><br />
+      <sub>Download/upload throughput measurement with circular gauge and history</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
