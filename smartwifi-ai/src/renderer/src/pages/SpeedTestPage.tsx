@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Gauge, Play, ArrowDown, ArrowUp, Activity } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { Gauge, Play, ArrowDown, ArrowUp, Activity, Server, RefreshCw, Trash2 } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, ProgressBar } from '@/components/ui'
+import { SpeedometerGauge } from '@/components/SpeedometerGauge'
+import { executeRealSpeedTest, SpeedTestFinalResult } from '@/utils/speedTestRunner'
 import { useToast } from '@/context'
 
 interface TestResult {
@@ -14,8 +16,9 @@ interface TestResult {
 }
 
 /**
- * SpeedTestPage — Simulates and executes real-time network bandwidth checks.
- * Features a high-fidelity visual counter, multi-stage testing, and persistent local history.
+ * SpeedTestPage — Real-Time Bandwidth & Latency Measurement Engine.
+ * Runs Ookla-style speed tests with actual payload transfer, real-time sweeping gauge,
+ * live ping/jitter detection, and persistent SQLite metric logs.
  */
 export function SpeedTestPage(): React.JSX.Element {
   const { showToast } = useToast()
@@ -25,322 +28,369 @@ export function SpeedTestPage(): React.JSX.Element {
   )
   const [progress, setProgress] = useState(0)
 
-  // Live sweeping values
+  // Live real-time values for needle gauge & cards
+  const [liveGaugeMbps, setLiveGaugeMbps] = useState(0)
   const [liveDownload, setLiveDownload] = useState(0)
   const [liveUpload, setLiveUpload] = useState(0)
   const [livePing, setLivePing] = useState(0)
   const [liveJitter, setLiveJitter] = useState(0)
-  const [liveServer, setLiveServer] = useState('—')
+  const [serverNode, setServerNode] = useState('Detecting server node...')
 
-  // Final static values
-  const [finalDownload, setFinalDownload] = useState<number | null>(null)
-  const [finalUpload, setFinalUpload] = useState<number | null>(null)
-  const [finalPing, setFinalPing] = useState<number | null>(null)
-  const [finalJitter, setFinalJitter] = useState<number | null>(null)
-
+  // Final locked test results
+  const [finalResult, setFinalResult] = useState<SpeedTestFinalResult | null>(null)
   const [history, setHistory] = useState<TestResult[]>([])
 
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Load persistent test history from database
   useEffect(() => {
     window.api.db
       .getSpeedTests()
       .then(setHistory)
       .catch((err) => console.error('Failed to load speed test history:', err))
+
+    // Initial server node lookup
+    if (window.api?.getPublicIp) {
+      window.api
+        .getPublicIp()
+        .then((info) => {
+          if (info && info.isp) {
+            setServerNode(`${info.isp} (${info.location || info.countryCode})`)
+          } else {
+            setServerNode('Cloudflare Edge Network')
+          }
+        })
+        .catch(() => setServerNode('Cloudflare Edge Network'))
+    }
   }, [])
 
-  const runSpeedTest = useCallback(() => {
+  // Execute real speed test
+  const runSpeedTest = useCallback(async () => {
     if (isRunning) return
+
     setIsRunning(true)
     setProgress(0)
     setTestPhase('ping')
-    setLiveServer('Cloudflare Edge Network')
+    setFinalResult(null)
 
-    // Reset results
-    setFinalDownload(null)
-    setFinalUpload(null)
-    setFinalPing(null)
-    setFinalJitter(null)
+    // Reset live counters
+    setLiveGaugeMbps(0)
+    setLiveDownload(0)
+    setLiveUpload(0)
+    setLivePing(0)
+    setLiveJitter(0)
 
     showToast(
       'info',
       'Speed Test Started',
-      'Initializing connection to local speed server...',
-      2000
+      'Measuring real internet bandwidth and ping latency...',
+      2500
     )
 
-    let currentProgress = 0
-    const intervalTime = 100 // 100ms update rate
-    const totalDuration = 9000 // 9 seconds total
-    const totalSteps = totalDuration / intervalTime
+    abortControllerRef.current = new AbortController()
 
-    const timer = setInterval(() => {
-      currentProgress += 1
-      const percent = Math.round((currentProgress / totalSteps) * 100)
-      setProgress(percent)
+    try {
+      const result = await executeRealSpeedTest(
+        {
+          onPhaseChange: (phase) => {
+            setTestPhase(phase)
+            if (phase === 'download') setLiveGaugeMbps(0)
+            if (phase === 'upload') setLiveGaugeMbps(0)
+          },
+          onProgress: (pct) => setProgress(pct),
+          onPingUpdate: (ping, jitter) => {
+            setLivePing(ping)
+            setLiveJitter(jitter)
+          },
+          onDownloadUpdate: (mbps) => {
+            setLiveDownload(mbps)
+            setLiveGaugeMbps(mbps)
+          },
+          onUploadUpdate: (mbps) => {
+            setLiveUpload(mbps)
+            setLiveGaugeMbps(mbps)
+          },
+          onServerDetected: (nodeName) => {
+            setServerNode(nodeName)
+          }
+        },
+        abortControllerRef.current.signal
+      )
 
-      // Phase transitions
-      if (percent < 25) {
-        // Ping Phase (0% - 25%)
-        setTestPhase('ping')
-        // Live sweep ping and jitter
-        setLivePing(Math.round(12 + Math.random() * 8))
-        setLiveJitter(Math.round(1 + Math.random() * 3))
-      } else if (percent < 65) {
-        // Download Phase (25% - 65%)
-        setTestPhase('download')
-        // Smooth sweeping curve download
-        const targetDl = 94.6
-        const jitterVal = Math.random() * 5 - 2.5
-        const sweepDl = Math.max(10, (percent - 25) / 40) * targetDl + jitterVal
-        setLiveDownload(parseFloat(sweepDl.toFixed(1)))
-      } else if (percent < 95) {
-        // Upload Phase (65% - 95%)
-        setTestPhase('upload')
-        // Smooth sweeping curve upload
-        const targetUl = 41.2
-        const jitterVal = Math.random() * 3 - 1.5
-        const sweepUl = Math.max(10, (percent - 65) / 30) * targetUl + jitterVal
-        setLiveUpload(parseFloat(sweepUl.toFixed(1)))
-      } else {
-        // Finalizing
-        setTestPhase('completed')
+      // Lock in final results
+      setFinalResult(result)
+      setLiveDownload(result.downloadMbps)
+      setLiveUpload(result.uploadMbps)
+      setLivePing(result.pingMs)
+      setLiveJitter(result.jitterMs)
+      setLiveGaugeMbps(result.downloadMbps)
+      setIsRunning(false)
+      setTestPhase('completed')
+
+      // Save result to SQLite DB
+      const now = new Date()
+      const newRecord: TestResult = {
+        timestamp: now.toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        downloadMbps: result.downloadMbps,
+        uploadMbps: result.uploadMbps,
+        pingMs: result.pingMs,
+        jitterMs: result.jitterMs,
+        server: result.server
       }
 
-      if (currentProgress >= totalSteps) {
-        clearInterval(timer)
-        setIsRunning(false)
-
-        // Lock in final results
-        const finalDlVal = parseFloat((82.4 + Math.random() * 15).toFixed(1))
-        const finalUlVal = parseFloat((36.2 + Math.random() * 7).toFixed(1))
-        const finalPingVal = Math.round(14 + Math.random() * 4)
-        const finalJitterVal = Math.round(2 + Math.random() * 2)
-
-        setFinalDownload(finalDlVal)
-        setFinalUpload(finalUlVal)
-        setFinalPing(finalPingVal)
-        setFinalJitter(finalJitterVal)
-
-        setLiveDownload(finalDlVal)
-        setLiveUpload(finalUlVal)
-        setLivePing(finalPingVal)
-        setLiveJitter(finalJitterVal)
-
-        // Add to history list
-        const now = new Date()
-        const newResult: TestResult = {
-          timestamp: now.toLocaleString([], {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }),
-          downloadMbps: finalDlVal,
-          uploadMbps: finalUlVal,
-          pingMs: finalPingVal,
-          jitterMs: finalJitterVal,
-          server: 'Cloudflare Edge (SJC)'
-        }
-
-        // Save to DB and refresh list
-        window.api.db
-          .insertSpeedTest(newResult)
-          .then(() => window.api.db.getSpeedTests())
-          .then(setHistory)
-          .catch((err) => {
-            console.error('Failed to save speed test to DB:', err)
-            // Fallback to local state update if DB fails
-            setHistory((prev) => [newResult, ...prev].slice(0, 10))
-          })
-
-        showToast(
-          'success',
-          'Bandwidth Test Complete',
-          `Download: ${finalDlVal} Mbps · Upload: ${finalUlVal} Mbps`
-        )
+      try {
+        await window.api.db.insertSpeedTest(newRecord)
+        const updatedHistory = await window.api.db.getSpeedTests()
+        setHistory(updatedHistory)
+      } catch (dbErr) {
+        console.error('Failed to save speed test to DB:', dbErr)
+        setHistory((prev) => [newRecord, ...prev].slice(0, 15))
       }
-    }, intervalTime)
+
+      showToast(
+        'success',
+        'Speed Test Complete',
+        `Download: ${result.downloadMbps} Mbps · Upload: ${result.uploadMbps} Mbps · Ping: ${result.pingMs} ms`
+      )
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      if (errorMessage !== 'Test aborted') {
+        console.error('Speed test execution error:', err)
+        showToast('error', 'Speed Test Failed', 'Could not complete speed measurement.')
+      }
+      setIsRunning(false)
+      setTestPhase('idle')
+    }
   }, [isRunning, showToast])
 
-  const clearHistory = useCallback(() => {
-    window.api.db
-      .clearSpeedTests()
-      .then(() => {
-        setHistory([])
-        showToast('info', 'History Cleared', 'Speed test metrics database cleared.')
-      })
-      .catch((err) => {
-        console.error('Failed to clear history:', err)
-        showToast('error', 'Database Error', 'Could not clear database.')
-      })
+  const stopSpeedTest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      setIsRunning(false)
+      setTestPhase('idle')
+      showToast('info', 'Test Cancelled', 'Speed test was stopped.')
+    }
+  }, [showToast])
+
+  const clearHistory = useCallback(async () => {
+    try {
+      await window.api.db.clearSpeedTests()
+      setHistory([])
+      showToast('info', 'History Cleared', 'Speed test metrics database cleared.')
+    } catch (err) {
+      console.error('Failed to clear history:', err)
+      showToast('error', 'Database Error', 'Could not clear speed test database.')
+    }
   }, [showToast])
 
   return (
     <div className="space-y-6">
-      {/* Header Info */}
+      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Internet Speed Test</h1>
           <p className="text-xs text-[var(--text-secondary)]">
-            Measure real-time download speed, upload speed, and response ping
+            Real-time Ookla-style internet speed test with live payload measurement
           </p>
         </div>
         <div className="flex items-center gap-3">
           {history.length > 0 && (
-            <Button variant="secondary" size="sm" onClick={clearHistory}>
+            <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearHistory}>
               Clear History
             </Button>
           )}
-          <Button
-            variant="accent"
-            size="md"
-            leftIcon={<Play size={16} />}
-            onClick={runSpeedTest}
-            isLoading={isRunning}
-          >
-            {isRunning ? 'Testing...' : 'Start Speed Test'}
-          </Button>
+          {isRunning ? (
+            <Button variant="danger" size="md" onClick={stopSpeedTest}>
+              Stop Test
+            </Button>
+          ) : (
+            <Button
+              variant="accent"
+              size="md"
+              leftIcon={<Play size={16} />}
+              onClick={runSpeedTest}
+            >
+              Start Speed Test
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Progress Bar during execution */}
+      {/* Progress Bar during active test */}
       {isRunning && (
-        <div className="w-full bg-surface-50 dark:bg-surface-850 border border-[var(--border-color)] p-4 rounded-xl space-y-2 animate-fade-in">
+        <div className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-4 rounded-xl space-y-2 animate-fade-in shadow-sm">
           <div className="flex justify-between items-center text-xs font-semibold">
-            <span className="text-[var(--text-primary)] uppercase tracking-wider">
-              {testPhase === 'ping' && 'Measuring Latency (Ping)...'}
-              {testPhase === 'download' && 'Testing Download Bandwidth...'}
-              {testPhase === 'upload' && 'Testing Upload Bandwidth...'}
-              {testPhase === 'completed' && 'Finalizing test scores...'}
+            <span className="text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
+              <RefreshCw size={14} className="animate-spin text-accent-500" />
+              {testPhase === 'ping' && 'Phase 1/3: Measuring Ping Latency & Jitter...'}
+              {testPhase === 'download' && 'Phase 2/3: Streaming Download Bandwidth Payload...'}
+              {testPhase === 'upload' && 'Phase 3/3: Testing Upload Bandwidth Throughput...'}
+              {testPhase === 'completed' && 'Finalizing results...'}
             </span>
-            <span className="text-accent-500 font-mono">{progress}%</span>
+            <span className="text-accent-500 font-mono text-sm">{progress}%</span>
           </div>
           <ProgressBar value={progress} variant="accent" size="sm" showLabel={false} />
         </div>
       )}
 
-      {/* Main Gauges Display */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Download Card */}
-        <Card className="flex flex-col justify-between overflow-hidden relative">
+      {/* Speedometer Gauge Display */}
+      <Card className="flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[var(--bg-card)] border border-[var(--border-color)] shadow-card">
+        <SpeedometerGauge
+          value={liveGaugeMbps}
+          maxMbps={500}
+          phase={testPhase}
+          progress={progress}
+          pingMs={livePing}
+          jitterMs={liveJitter}
+        />
+      </Card>
+
+      {/* Real-Time Result Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Download Rate Card */}
+        <Card className="relative overflow-hidden">
           <CardHeader
             title="Download Rate"
-            icon={<ArrowDown className="text-primary-500" size={16} />}
+            icon={<ArrowDown className="text-emerald-500" size={16} />}
           />
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <span className="text-5xl font-black tracking-tight text-[var(--text-primary)] font-mono">
-              {isRunning && testPhase === 'download'
-                ? liveDownload
-                : finalDownload !== null
-                  ? finalDownload
-                  : '—'}
-            </span>
-            <span className="text-[10px] text-[var(--text-muted)] mt-1.5 font-bold uppercase tracking-widest">
-              Mbps
+          <CardContent className="flex flex-col items-center justify-center py-4">
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black font-mono tracking-tight text-[var(--text-primary)]">
+                {liveDownload > 0
+                  ? liveDownload.toFixed(1)
+                  : finalResult !== null
+                    ? finalResult.downloadMbps.toFixed(1)
+                    : '—'}
+              </span>
+              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Mbps</span>
+            </div>
+            <span className="text-[11px] text-[var(--text-secondary)] mt-1">
+              {testPhase === 'download' ? 'Streaming...' : 'Peak Download Speed'}
             </span>
           </CardContent>
           {testPhase === 'download' && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-500 animate-pulse-soft" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 animate-pulse" />
           )}
         </Card>
 
-        {/* Upload Card */}
-        <Card className="flex flex-col justify-between overflow-hidden relative">
+        {/* Upload Rate Card */}
+        <Card className="relative overflow-hidden">
           <CardHeader
             title="Upload Rate"
-            icon={<ArrowUp className="text-accent-500" size={16} />}
+            icon={<ArrowUp className="text-cyan-500" size={16} />}
           />
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <span className="text-5xl font-black tracking-tight text-[var(--text-primary)] font-mono">
-              {isRunning && testPhase === 'upload'
-                ? liveUpload
-                : finalUpload !== null
-                  ? finalUpload
-                  : '—'}
-            </span>
-            <span className="text-[10px] text-[var(--text-muted)] mt-1.5 font-bold uppercase tracking-widest">
-              Mbps
+          <CardContent className="flex flex-col items-center justify-center py-4">
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black font-mono tracking-tight text-[var(--text-primary)]">
+                {liveUpload > 0
+                  ? liveUpload.toFixed(1)
+                  : finalResult !== null
+                    ? finalResult.uploadMbps.toFixed(1)
+                    : '—'}
+              </span>
+              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Mbps</span>
+            </div>
+            <span className="text-[11px] text-[var(--text-secondary)] mt-1">
+              {testPhase === 'upload' ? 'Sending Payload...' : 'Peak Upload Speed'}
             </span>
           </CardContent>
           {testPhase === 'upload' && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent-500 animate-pulse-soft" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-cyan-500 animate-pulse" />
           )}
         </Card>
 
-        {/* Latency card */}
-        <Card className="flex flex-col justify-between">
+        {/* Ping & Jitter Card */}
+        <Card className="relative overflow-hidden">
           <CardHeader
-            title="Latency Metrics"
-            icon={<Activity className="text-warning-500" size={16} />}
+            title="Ping &amp; Jitter"
+            icon={<Activity className="text-amber-500" size={16} />}
           />
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2 py-3">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-[var(--text-muted)] font-medium">Ping Latency</span>
-              <span className="font-semibold font-mono text-[var(--text-primary)]">
-                {isRunning || finalPing !== null ? `${livePing} ms` : '—'}
+              <span className="text-[var(--text-secondary)]">Ping Latency</span>
+              <span className="font-bold font-mono text-[var(--text-primary)]">
+                {livePing > 0 || finalResult !== null ? `${livePing} ms` : '—'}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-[var(--text-muted)] font-medium">Jitter Variance</span>
-              <span className="font-semibold font-mono text-[var(--text-primary)]">
-                {isRunning || finalJitter !== null ? `${liveJitter} ms` : '—'}
+              <span className="text-[var(--text-secondary)]">Jitter Variance</span>
+              <span className="font-bold font-mono text-[var(--text-primary)]">
+                {liveJitter > 0 || finalResult !== null ? `${liveJitter} ms` : '—'}
               </span>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[var(--text-muted)] font-medium">Server Node</span>
-              <span className="font-semibold text-[var(--text-primary)] truncate max-w-[55%]">
-                {liveServer}
-              </span>
-            </div>
+          </CardContent>
+          {testPhase === 'ping' && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-amber-500 animate-pulse" />
+          )}
+        </Card>
+
+        {/* Server & ISP Node Card */}
+        <Card className="relative overflow-hidden">
+          <CardHeader
+            title="Test Server Node"
+            icon={<Server className="text-indigo-500" size={16} />}
+          />
+          <CardContent className="flex flex-col justify-center py-3">
+            <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+              {serverNode}
+            </span>
+            <span className="text-[11px] text-[var(--text-secondary)] mt-1 truncate">
+              Cloudflare Edge Test Infrastructure
+            </span>
           </CardContent>
         </Card>
       </div>
 
-      {/* History table */}
+      {/* Speed Test History Log */}
       <Card>
         <CardHeader
-          title="Recent Speed Test History"
-          subtitle="Previous bandwidth tests recorded on this device"
+          title="Speed Test Metrics History"
+          subtitle="Persistent record of previous bandwidth tests saved in SQLite"
           icon={<Gauge size={16} />}
         />
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)]">
-                  <th className="py-2.5 font-semibold">Timestamp</th>
-                  <th className="py-2.5 font-semibold">Download</th>
-                  <th className="py-2.5 font-semibold">Upload</th>
-                  <th className="py-2.5 font-semibold">Ping / Jitter</th>
-                  <th className="py-2.5 font-semibold">Server Host</th>
+                <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)] uppercase tracking-wider text-[10px]">
+                  <th className="py-2.5 font-bold">Timestamp</th>
+                  <th className="py-2.5 font-bold">Download</th>
+                  <th className="py-2.5 font-bold">Upload</th>
+                  <th className="py-2.5 font-bold">Ping / Jitter</th>
+                  <th className="py-2.5 font-bold">Server Node</th>
                 </tr>
               </thead>
               <tbody>
                 {history.length === 0 ? (
-                  <tr className="border-b border-[var(--border-color)] text-[var(--text-primary)]">
-                    <td className="py-4" colSpan={5}>
-                      <div className="text-center text-[var(--text-muted)] py-2">
-                        No previous test metrics recorded. Click &quot;Start Speed Test&quot; to
-                        begin.
-                      </div>
+                  <tr>
+                    <td className="py-6 text-center text-[var(--text-muted)]" colSpan={5}>
+                      No speed test metrics recorded yet. Click &quot;Start Speed Test&quot; to measure your network connection.
                     </td>
                   </tr>
                 ) : (
                   history.map((item, idx) => (
                     <tr
-                      key={idx}
-                      className="border-b border-[var(--border-color)]/50 last:border-0 text-[var(--text-primary)]"
+                      key={item.id || idx}
+                      className="border-b border-[var(--border-color)]/50 last:border-0 hover:bg-surface-50/50 dark:hover:bg-surface-800/30 transition-colors"
                     >
-                      <td className="py-3 font-medium">{item.timestamp}</td>
-                      <td className="py-3 font-semibold font-mono text-primary-500">
-                        {item.downloadMbps} Mbps
+                      <td className="py-3 font-medium text-[var(--text-primary)]">{item.timestamp}</td>
+                      <td className="py-3 font-semibold font-mono text-emerald-500">
+                        {item.downloadMbps.toFixed(1)} Mbps
                       </td>
-                      <td className="py-3 font-semibold font-mono text-accent-500">
-                        {item.uploadMbps} Mbps
+                      <td className="py-3 font-semibold font-mono text-cyan-500">
+                        {item.uploadMbps.toFixed(1)} Mbps
                       </td>
                       <td className="py-3 font-mono text-[var(--text-secondary)]">
                         {item.pingMs} ms / {item.jitterMs} ms
                       </td>
-                      <td className="py-3 text-[var(--text-secondary)]">{item.server}</td>
+                      <td className="py-3 text-[var(--text-secondary)] truncate max-w-[200px]">
+                        {item.server}
+                      </td>
                     </tr>
                   ))
                 )}
