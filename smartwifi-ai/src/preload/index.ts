@@ -9,6 +9,7 @@ const api = {
     ipcRenderer.invoke('wifi:reconnect', interfaceName, ssid),
   getNetworkConfig: () => ipcRenderer.invoke('net:get-config'),
   getPublicIp: () => ipcRenderer.invoke('net:get-public-ip'),
+  runNativeSpeedTest: () => ipcRenderer.invoke('net:run-speed-test'),
   scanProcesses: () => ipcRenderer.invoke('net:scan-processes'),
   getResources: () => ipcRenderer.invoke('sys:get-resources'),
   db: {

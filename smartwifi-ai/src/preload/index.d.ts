@@ -66,6 +66,13 @@ declare global {
         countryCode: string
         isSimulated?: boolean
       }>
+      runNativeSpeedTest: () => Promise<{
+        pingMs: number
+        jitterMs: number
+        downloadMbps: number
+        uploadMbps: number
+        server: string
+      }>
       scanProcesses: () => Promise<
         Array<{
           pid: number
