@@ -175,7 +175,7 @@ export function SpeedometerGauge({
           <circle cx="150" cy="45" r="3" fill="#ffffff" />
         </g>
 
-        {/* Live Digital Display with Auto-Unit Formatting */}
+        {/* Live Digital Display with Auto-Unit Formatting (Exact case: Mbps, Kbps, Gbps) */}
         <text
           x="150"
           y="188"
@@ -191,10 +191,10 @@ export function SpeedometerGauge({
           x="150"
           y="206"
           fill="var(--text-muted)"
-          fontSize="11"
+          fontSize="12"
           fontWeight="700"
           textAnchor="middle"
-          className="uppercase tracking-widest"
+          className="tracking-wider"
         >
           {formatted.unit}
         </text>

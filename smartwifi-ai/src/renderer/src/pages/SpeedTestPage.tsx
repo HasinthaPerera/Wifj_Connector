@@ -291,7 +291,7 @@ export function SpeedTestPage(): React.JSX.Element {
               <span className="text-4xl font-black font-mono tracking-tight text-[var(--text-primary)]">
                 {currentDlMbps > 0 ? dlFormatted.value : '—'}
               </span>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">
+              <span className="text-xs font-bold text-[var(--text-muted)]">
                 {currentDlMbps > 0 ? dlFormatted.unit : 'Mbps'}
               </span>
             </div>
@@ -315,7 +315,7 @@ export function SpeedTestPage(): React.JSX.Element {
               <span className="text-4xl font-black font-mono tracking-tight text-[var(--text-primary)]">
                 {currentUlMbps > 0 ? ulFormatted.value : '—'}
               </span>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase">
+              <span className="text-xs font-bold text-[var(--text-muted)]">
                 {currentUlMbps > 0 ? ulFormatted.unit : 'Mbps'}
               </span>
             </div>
