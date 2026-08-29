@@ -187,7 +187,7 @@ export interface PublicIpDetails {
  */
 export async function getPublicIpDetails(): Promise<PublicIpDetails> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 3500)
+  const timeoutId = setTimeout(() => controller.abort(), 3000)
 
   try {
     const res = await fetch('https://ipapi.co/json/', { signal: controller.signal })
@@ -222,7 +222,7 @@ export async function getPublicIpDetails(): Promise<PublicIpDetails> {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Native Main Process Speed Measurement Engine
+   Native Main Process Adaptive Speed Measurement Engine
 ───────────────────────────────────────────────────────────── */
 
 export interface MainSpeedTestResult {
@@ -236,7 +236,7 @@ export interface MainSpeedTestResult {
 const TEST_DOWN_URL = 'https://speed.cloudflare.com/__down'
 const TEST_UP_URL = 'https://speed.cloudflare.com/__up'
 
-function httpGetProbe(targetUrl: string, timeoutMs = 4000): Promise<{ durationMs: number; bytes: number }> {
+function httpGetProbe(targetUrl: string, timeoutMs = 5000): Promise<{ durationMs: number; bytes: number }> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(targetUrl)
     const client = parsedUrl.protocol === 'https:' ? https : http
@@ -271,7 +271,7 @@ function httpGetProbe(targetUrl: string, timeoutMs = 4000): Promise<{ durationMs
   })
 }
 
-function httpPostProbe(targetUrl: string, payloadBytes: number, timeoutMs = 8000): Promise<{ durationMs: number; bytes: number }> {
+function httpPostProbe(targetUrl: string, payloadBytes: number, timeoutMs = 6000): Promise<{ durationMs: number; bytes: number }> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(targetUrl)
     const client = parsedUrl.protocol === 'https:' ? https : http
@@ -309,62 +309,75 @@ function httpPostProbe(targetUrl: string, payloadBytes: number, timeoutMs = 8000
 }
 
 /**
- * Runs a complete native real speed test in the Node.js main process with zero CORS restrictions.
+ * Runs adaptive speed probes in Node.js main process without blocking on ISP lookup or fixed payload timeouts.
  */
 export async function runNativeSpeedTest(): Promise<MainSpeedTestResult> {
-  let detectedServer = 'Cloudflare Edge Network'
-  try {
-    const ipInfo = await getPublicIpDetails()
-    if (ipInfo && ipInfo.isp) {
-      detectedServer = `${ipInfo.isp} (${ipInfo.location || ipInfo.countryCode})`
-    }
-  } catch (e) {
-    console.warn('ISP lookup warning:', e)
-  }
+  const detectedServer = 'Cloudflare Edge Infrastructure'
 
-  // 1. Ping & Jitter Phase
+  // 1. Ping & Jitter Probes (3 fast 100B GET requests)
   const pings: number[] = []
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     try {
       const probe = await httpGetProbe(`${TEST_DOWN_URL}?bytes=100&r=${Math.random()}`, 3000)
       if (probe.durationMs > 0) pings.push(probe.durationMs)
     } catch {
       // Ignore single probe timeout
     }
-    await new Promise((r) => setTimeout(r, 60))
   }
 
-  const pingMs = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 25
+  const pingMs = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 35
   const jitterMs =
     pings.length > 1
       ? Math.round(
           pings.slice(1).reduce((acc, val, idx) => acc + Math.abs(val - pings[idx]), 0) /
             (pings.length - 1)
         )
-      : 3
+      : 4
 
-  // 2. Download Speed Phase (2MB adaptive stream)
-  let downloadMbps = 0
-  try {
-    const probe = await httpGetProbe(`${TEST_DOWN_URL}?bytes=2000000&r=${Math.random()}`, 10000)
-    if (probe.bytes > 0 && probe.durationMs > 50) {
-      const durationSec = probe.durationMs / 1000
-      downloadMbps = parseFloat(((probe.bytes * 8) / (durationSec * 1_000_000)).toFixed(2))
+  // 2. Adaptive Download Speed Probes (250KB initial probe -> 1.5MB secondary probe)
+  const downloadProbes = [250_000, 1_500_000]
+  let totalDlBytes = 0
+  let totalDlTimeMs = 0
+
+  for (const bytesRequested of downloadProbes) {
+    try {
+      const probe = await httpGetProbe(`${TEST_DOWN_URL}?bytes=${bytesRequested}&r=${Math.random()}`, 5000)
+      if (probe.bytes > 0 && probe.durationMs > 20) {
+        totalDlBytes += probe.bytes
+        totalDlTimeMs += probe.durationMs
+      }
+    } catch (err) {
+      console.warn('Download probe warning:', err)
+      break
     }
-  } catch (err) {
-    console.warn('Native download test warning:', err)
   }
 
-  // 3. Upload Speed Phase (500KB adaptive post)
-  let uploadMbps = 0
-  try {
-    const probe = await httpPostProbe(TEST_UP_URL, 500000, 10000)
-    if (probe.bytes > 0 && probe.durationMs > 50) {
-      const durationSec = probe.durationMs / 1000
-      uploadMbps = parseFloat(((probe.bytes * 8) / (durationSec * 1_000_000)).toFixed(2))
+  let downloadMbps = 0
+  if (totalDlBytes > 0 && totalDlTimeMs > 0) {
+    downloadMbps = parseFloat(((totalDlBytes * 8) / ((totalDlTimeMs / 1000) * 1_000_000)).toFixed(2))
+  }
+
+  // 3. Adaptive Upload Speed Probes (100KB initial probe -> 300KB secondary probe)
+  const uploadProbes = [100_000, 300_000]
+  let totalUlBytes = 0
+  let totalUlTimeMs = 0
+
+  for (const bytesToSend of uploadProbes) {
+    try {
+      const probe = await httpPostProbe(`${TEST_UP_URL}?r=${Math.random()}`, bytesToSend, 5000)
+      if (probe.bytes > 0 && probe.durationMs > 20) {
+        totalUlBytes += probe.bytes
+        totalUlTimeMs += probe.durationMs
+      }
+    } catch (err) {
+      console.warn('Upload probe warning:', err)
+      break
     }
-  } catch (err) {
-    console.warn('Native upload test warning:', err)
+  }
+
+  let uploadMbps = 0
+  if (totalUlBytes > 0 && totalUlTimeMs > 0) {
+    uploadMbps = parseFloat(((totalUlBytes * 8) / ((totalUlTimeMs / 1000) * 1_000_000)).toFixed(2))
   }
 
   return {

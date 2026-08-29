@@ -62,37 +62,33 @@ export async function executeRealSpeedTest(
     onServerDetected
   } = callbacks
 
+  // Non-blocking background ISP lookup
+  if (window.api?.getPublicIp) {
+    window.api.getPublicIp().then((ipInfo) => {
+      if (ipInfo && ipInfo.isp) {
+        onServerDetected?.(`${ipInfo.isp} (${ipInfo.location || ipInfo.countryCode})`)
+      }
+    }).catch(() => {})
+  }
+
   // If running inside Electron with native main process IPC capability
   if (window.api?.runNativeSpeedTest) {
     onPhaseChange?.('ping')
     onProgress?.(10)
 
-    let detectedServer = 'Cloudflare Edge Network'
-    try {
-      if (window.api.getPublicIp) {
-        const publicIp = await window.api.getPublicIp()
-        if (publicIp && publicIp.isp) {
-          detectedServer = `${publicIp.isp} (${publicIp.location || publicIp.countryCode})`
-        }
-      }
-    } catch {
-      // Ignore ISP lookup error
-    }
-    onServerDetected?.(detectedServer)
-
-    // Execute native main process measurement
+    // Run native main process measurement
     const nativePromise = window.api.runNativeSpeedTest()
 
-    // Smooth UI progress simulation while native probe runs in background
+    // Smooth UI progress simulation while native probe runs
     let currentPct = 10
     const progressInterval = setInterval(() => {
       if (currentPct < 90) {
-        currentPct += 5
+        currentPct += 10
         onProgress?.(currentPct)
-        if (currentPct === 25) onPhaseChange?.('download')
-        if (currentPct === 65) onPhaseChange?.('upload')
+        if (currentPct === 30) onPhaseChange?.('download')
+        if (currentPct === 70) onPhaseChange?.('upload')
       }
-    }, 300)
+    }, 250)
 
     try {
       const result = await nativePromise
@@ -111,63 +107,49 @@ export async function executeRealSpeedTest(
         uploadMbps: result.uploadMbps,
         pingMs: result.pingMs,
         jitterMs: result.jitterMs,
-        server: result.server || detectedServer
+        server: result.server || 'Cloudflare Edge Infrastructure'
       }
     } catch (err) {
       clearInterval(progressInterval)
       if (abortSignal?.aborted) throw new Error('Test aborted')
-      console.warn('Native speed test fallback to browser stream:', err)
+      console.warn('Native speed test error, running fallback probe:', err)
     }
   }
 
   // Web Browser / Fallback Probe Mode
-  let detectedServer = 'Cloudflare Edge Network'
-  try {
-    if (window.api?.getPublicIp) {
-      const publicIp = await window.api.getPublicIp()
-      if (publicIp && publicIp.isp) {
-        detectedServer = `${publicIp.isp} (${publicIp.location || publicIp.countryCode})`
-      }
-    }
-  } catch {
-    // Ignore
-  }
-  onServerDetected?.(detectedServer)
-
-  // 1. Ping Phase
   onPhaseChange?.('ping')
   onProgress?.(10)
   const pings: number[] = []
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     if (abortSignal?.aborted) throw new Error('Test aborted')
     const t0 = performance.now()
     try {
       const res = await fetch(`${CLOUDFLARE_DOWN_URL}?bytes=100&r=${Math.random()}`, { cache: 'no-store' })
       if (res.ok) pings.push(performance.now() - t0)
     } catch {
-      // Ignore dropped probe
+      // Ignore
     }
-    await new Promise((r) => setTimeout(r, 50))
+    await new Promise((r) => setTimeout(r, 40))
   }
 
-  const pingMs = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 25
+  const pingMs = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 35
   const jitterMs =
     pings.length > 1
       ? Math.round(
           pings.slice(1).reduce((acc, val, idx) => acc + Math.abs(val - pings[idx]), 0) /
             (pings.length - 1)
         )
-      : 3
+      : 4
   onPingUpdate?.(pingMs, jitterMs)
 
-  // 2. Download Phase (1.5MB stream)
+  // Download Phase (500KB stream)
   onPhaseChange?.('download')
-  onProgress?.(30)
+  onProgress?.(40)
   let downloadMbps = 0
   try {
     const t0 = performance.now()
-    const res = await fetch(`${CLOUDFLARE_DOWN_URL}?bytes=1500000&r=${Math.random()}`, { cache: 'no-store' })
+    const res = await fetch(`${CLOUDFLARE_DOWN_URL}?bytes=500000&r=${Math.random()}`, { cache: 'no-store' })
     if (res.ok && res.body) {
       const reader = res.body.getReader()
       let bytesRead = 0
@@ -185,13 +167,13 @@ export async function executeRealSpeedTest(
     console.warn('Fallback download probe warning:', e)
   }
   onDownloadUpdate?.(downloadMbps)
-  onProgress?.(65)
+  onProgress?.(70)
 
-  // 3. Upload Phase (500KB post)
+  // Upload Phase (200KB post)
   onPhaseChange?.('upload')
   let uploadMbps = 0
   try {
-    const payload = new Uint8Array(500000)
+    const payload = new Uint8Array(200000)
     const t0 = performance.now()
     const res = await fetch(`${CLOUDFLARE_UP_URL}?r=${Math.random()}`, {
       method: 'POST',
@@ -214,6 +196,6 @@ export async function executeRealSpeedTest(
     uploadMbps,
     pingMs,
     jitterMs,
-    server: detectedServer
+    server: 'Cloudflare Edge Infrastructure'
   }
 }
