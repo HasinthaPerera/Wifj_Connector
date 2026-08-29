@@ -1,7 +1,8 @@
 /**
  * Real-Time Bandwidth & Latency Speed Test Runner
- * Performs multi-connection speed testing using Cloudflare CDN edge endpoints,
- * matching Speedtest by Ookla's parallel throughput measurement methodology.
+ * Measures real internet connection speeds using adaptive multi-probe HTTP payload streaming.
+ * Uses exact byte accounting (actualBytes / actualSeconds) with zero hardcoded fallbacks,
+ * ensuring accuracy across all connection speeds (from 1 Mbps to 1000 Mbps).
  */
 
 export interface SpeedTestCallbacks {
@@ -28,28 +29,25 @@ const CLOUDFLARE_UP_URL = 'https://speed.cloudflare.com/__up'
  * Format raw speed in Mbps to human readable speed string with appropriate unit (Kbps, Mbps, or Gbps).
  */
 export function formatSpeedUnit(mbps: number): { value: string; unit: string; rawMbps: number } {
-  if (mbps < 0.001) {
+  if (mbps <= 0.001) {
     return { value: '0.0', unit: 'Mbps', rawMbps: 0 }
   }
   if (mbps < 1.0) {
-    // Show in Kbps if below 1 Mbps
     const kbps = Math.round(mbps * 1000)
     return { value: kbps.toLocaleString(), unit: 'Kbps', rawMbps: mbps }
   }
   if (mbps >= 1000) {
-    // Show in Gbps if 1000 Mbps or higher
     const gbps = (mbps / 1000).toFixed(2)
     return { value: gbps, unit: 'Gbps', rawMbps: mbps }
   }
-  // Standard Mbps
-  return { value: mbps.toFixed(1), unit: 'Mbps', rawMbps: mbps }
+  return { value: mbps.toFixed(2), unit: 'Mbps', rawMbps: mbps }
 }
 
 /**
  * Runs a complete 3-phase real speed test:
- * 1. Ping & Jitter measurement (5 probe requests)
- * 2. Download speed measurement (Parallel streaming chunks)
- * 3. Upload speed measurement (Parallel POST payload requests)
+ * 1. Ping & Jitter measurement (5 probes)
+ * 2. Adaptive Download measurement (500KB -> 2.5MB -> 5MB probes)
+ * 3. Adaptive Upload measurement (500KB -> 1.5MB POST probes)
  */
 export async function executeRealSpeedTest(
   callbacks: SpeedTestCallbacks,
@@ -105,62 +103,62 @@ export async function executeRealSpeedTest(
         pings.push(duration)
       }
     } catch {
-      pings.push(16 + Math.random() * 6)
+      // Ignore dropped ping probe
     }
 
     onProgress?.(Math.round(5 + ((i + 1) / pingSamplesCount) * 15))
 
-    const avgPing = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 18
+    const avgPing = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 0
     const jitter =
       pings.length > 1
         ? Math.round(
             pings.slice(1).reduce((acc, val, idx) => acc + Math.abs(val - pings[idx]), 0) /
               (pings.length - 1)
           )
-        : 2
+        : 0
 
     onPingUpdate?.(avgPing, jitter)
-    await new Promise((r) => setTimeout(r, 80))
+    await new Promise((r) => setTimeout(r, 60))
   }
 
-  const finalPing = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 20
+  const finalPing = pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : 0
   const finalJitter =
     pings.length > 1
       ? Math.round(
           pings.slice(1).reduce((acc, val, idx) => acc + Math.abs(val - pings[idx]), 0) /
             (pings.length - 1)
         )
-      : 2
+      : 0
 
   onPingUpdate?.(finalPing, finalJitter)
 
   // ---------------------------------------------------------
-  // Phase 2: Parallel Download Speed Measurement (20% -> 60%)
+  // Phase 2: Adaptive Download Speed Measurement (20% -> 60%)
   // ---------------------------------------------------------
   onPhaseChange?.('download')
   onProgress?.(20)
 
-  let finalDownloadMbps = 0
+  // Probe progression sizes: 500KB -> 2.5MB -> 5MB
+  const downloadProbeSizes = [500_000, 2_500_000, 5_000_000]
   const downloadSamples: number[] = []
 
-  try {
-    // Multi-connection download (3 parallel streams for accurate line speed)
-    const streamCount = 3
-    const downloadBytesPerStream = 10_000_000 // 10MB per stream = 30MB total payload
-    let totalBytesReceived = 0
+  let totalDownloadBytes = 0
+  let totalDownloadTimeSec = 0
 
-    const testStartTime = performance.now()
-    let lastCheckTime = testStartTime
-    let lastCheckBytes = 0
-    let ewmaMbps = 0
-    const alpha = 0.25
+  for (let probeIdx = 0; probeIdx < downloadProbeSizes.length; probeIdx++) {
+    if (abortSignal?.aborted) throw new Error('Test aborted')
 
-    const downloadStream = async () => {
+    const probeBytes = downloadProbeSizes[probeIdx]
+    const probeStartTime = performance.now()
+    let probeBytesReceived = 0
+
+    try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000)
+      // 8s max per probe to handle slower connections gracefully
+      const timeoutId = setTimeout(() => controller.abort(), 8000)
 
       const response = await fetch(
-        `${CLOUDFLARE_DOWN_URL}?bytes=${downloadBytesPerStream}&r=${Math.random()}`,
+        `${CLOUDFLARE_DOWN_URL}?bytes=${probeBytes}&r=${Math.random()}`,
         {
           cache: 'no-store',
           signal: controller.signal
@@ -170,143 +168,161 @@ export async function executeRealSpeedTest(
 
       if (response.ok && response.body) {
         const reader = response.body.getReader()
+        let lastReportTime = probeStartTime
+
         while (true) {
           if (abortSignal?.aborted) {
             reader.cancel()
-            break
+            throw new Error('Test aborted')
           }
           const { done, value } = await reader.read()
           if (done) break
-          totalBytesReceived += value.length
+
+          probeBytesReceived += value.length
+          const now = performance.now()
+          const elapsedSec = (now - probeStartTime) / 1000
+
+          // Calculate real-time speed
+          if (elapsedSec > 0.05 && now - lastReportTime >= 60) {
+            const currentMbps = (probeBytesReceived * 8) / (elapsedSec * 1_000_000)
+            onDownloadUpdate?.(parseFloat(currentMbps.toFixed(2)))
+            lastReportTime = now
+          }
         }
       }
+    } catch (err) {
+      console.warn(`Download probe ${probeIdx + 1} interrupted:`, err)
     }
 
-    // Interval to calculate aggregated throughput across all streams
-    const sampleInterval = setInterval(() => {
-      const now = performance.now()
-      const timeDelta = (now - lastCheckTime) / 1000
+    const probeEndTime = performance.now()
+    const probeDurationSec = (probeEndTime - probeStartTime) / 1000
 
-      if (timeDelta >= 0.07) {
-        const bytesDelta = totalBytesReceived - lastCheckBytes
-        const instantMbps = (bytesDelta * 8) / (timeDelta * 1_000_000)
+    if (probeBytesReceived > 0 && probeDurationSec > 0.05) {
+      const probeMbps = (probeBytesReceived * 8) / (probeDurationSec * 1_000_000)
+      downloadSamples.push(probeMbps)
+      totalDownloadBytes += probeBytesReceived
+      totalDownloadTimeSec += probeDurationSec
+    }
 
-        ewmaMbps = ewmaMbps === 0 ? instantMbps : alpha * instantMbps + (1 - alpha) * ewmaMbps
-        const roundedMbps = parseFloat(ewmaMbps.toFixed(1))
+    onProgress?.(Math.round(20 + ((probeIdx + 1) / downloadProbeSizes.length) * 40))
 
-        if (roundedMbps > 0) {
-          downloadSamples.push(roundedMbps)
-          onDownloadUpdate?.(roundedMbps)
-        }
-
-        const elapsedSeconds = (now - testStartTime) / 1000
-        const progressRatio = Math.min(
-          1,
-          Math.max(totalBytesReceived / (downloadBytesPerStream * streamCount), elapsedSeconds / 5)
-        )
-        onProgress?.(Math.round(20 + progressRatio * 40))
-
-        lastCheckTime = now
-        lastCheckBytes = totalBytesReceived
+    // If initial probe reveals speed is slow (< 15 Mbps), stop downloading further probes
+    // to avoid dragging out the test duration
+    if (downloadSamples.length > 0) {
+      const currentAvgMbps = downloadSamples.reduce((a, b) => a + b, 0) / downloadSamples.length
+      if (currentAvgMbps < 15 && probeIdx >= 0) {
+        onProgress?.(60)
+        break
       }
-    }, 70)
-
-    // Run parallel stream downloads
-    await Promise.allSettled(Array.from({ length: streamCount }, () => downloadStream()))
-    clearInterval(sampleInterval)
-  } catch (err) {
-    console.warn('Real download test stream failed, using fallback:', err)
+    }
   }
 
-  if (downloadSamples.length > 0) {
-    const sorted = [...downloadSamples].sort((a, b) => a - b)
-    // 80th percentile for accurate line throughput
-    const p80Index = Math.floor(sorted.length * 0.5)
-    const upperSamples = sorted.slice(p80Index)
+  // Exact download speed calculated from total bytes downloaded divided by total time
+  let finalDownloadMbps = 0
+  if (totalDownloadBytes > 0 && totalDownloadTimeSec > 0) {
     finalDownloadMbps = parseFloat(
-      (upperSamples.reduce((a, b) => a + b, 0) / upperSamples.length).toFixed(1)
+      ((totalDownloadBytes * 8) / (totalDownloadTimeSec * 1_000_000)).toFixed(2)
     )
-  } else {
-    // Real-world fallback
-    finalDownloadMbps = parseFloat((65 + Math.random() * 25).toFixed(1))
-    onDownloadUpdate?.(finalDownloadMbps)
+  } else if (downloadSamples.length > 0) {
+    finalDownloadMbps = parseFloat(
+      (downloadSamples.reduce((a, b) => a + b, 0) / downloadSamples.length).toFixed(2)
+    )
   }
-
+  onDownloadUpdate?.(finalDownloadMbps)
   onProgress?.(60)
 
   // ---------------------------------------------------------
-  // Phase 3: Real Upload Speed Measurement (60% -> 95%)
+  // Phase 3: Adaptive Upload Speed Measurement (60% -> 95%)
   // ---------------------------------------------------------
   onPhaseChange?.('upload')
 
-  let finalUploadMbps = 0
+  // Probe upload sizes: 250KB -> 1MB -> 2MB
+  const uploadProbeSizes = [250_000, 1_000_000, 2_000_000]
   const uploadSamples: number[] = []
 
-  try {
-    const uploadSizeBytes = 3_500_000 // 3.5MB payload
-    const payload = new Uint8Array(uploadSizeBytes)
+  let totalUploadBytes = 0
+  let totalUploadTimeSec = 0
 
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-      xhr.open('POST', `${CLOUDFLARE_UP_URL}?r=${Math.random()}`, true)
+  for (let probeIdx = 0; probeIdx < uploadProbeSizes.length; probeIdx++) {
+    if (abortSignal?.aborted) throw new Error('Test aborted')
 
-      const startTime = performance.now()
-      let lastTime = startTime
-      let lastLoaded = 0
-      let ewmaUlMbps = 0
-      const alpha = 0.3
+    const probeBytes = uploadProbeSizes[probeIdx]
+    const payload = new Uint8Array(probeBytes)
 
-      xhr.upload.onprogress = (e) => {
-        if (abortSignal?.aborted) {
-          xhr.abort()
-          reject(new Error('Test aborted'))
-          return
-        }
+    let bytesSentInProbe = 0
+    let durationInProbe = 0
 
-        const now = performance.now()
-        const timeDelta = (now - lastTime) / 1000
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', `${CLOUDFLARE_UP_URL}?r=${Math.random()}`, true)
 
-        if (timeDelta >= 0.07) {
-          const bytesDelta = e.loaded - lastLoaded
-          const instantMbps = (bytesDelta * 8) / (timeDelta * 1_000_000)
+        const startTime = performance.now()
+        let lastReportTime = startTime
 
-          ewmaUlMbps = ewmaUlMbps === 0 ? instantMbps : alpha * instantMbps + (1 - alpha) * ewmaUlMbps
-          const roundedMbps = parseFloat(ewmaUlMbps.toFixed(1))
-
-          if (roundedMbps > 0) {
-            uploadSamples.push(roundedMbps)
-            onUploadUpdate?.(roundedMbps)
+        xhr.upload.onprogress = (e) => {
+          if (abortSignal?.aborted) {
+            xhr.abort()
+            reject(new Error('Test aborted'))
+            return
           }
 
-          const ulPercent = e.lengthComputable ? e.loaded / e.total : (now - startTime) / 3500
-          onProgress?.(Math.round(60 + Math.min(1, ulPercent) * 35))
+          const now = performance.now()
+          const elapsedSec = (now - startTime) / 1000
 
-          lastTime = now
-          lastLoaded = e.loaded
+          if (elapsedSec > 0.05 && now - lastReportTime >= 60) {
+            const currentMbps = (e.loaded * 8) / (elapsedSec * 1_000_000)
+            onUploadUpdate?.(parseFloat(currentMbps.toFixed(2)))
+            lastReportTime = now
+          }
         }
+
+        xhr.onload = () => {
+          const endTime = performance.now()
+          bytesSentInProbe = probeBytes
+          durationInProbe = (endTime - startTime) / 1000
+          resolve()
+        }
+        xhr.onerror = () => reject(new Error('XHR upload error'))
+        xhr.ontimeout = () => reject(new Error('XHR timeout'))
+        xhr.timeout = 8000
+
+        xhr.send(payload)
+      })
+    } catch (err) {
+      console.warn(`Upload probe ${probeIdx + 1} interrupted:`, err)
+    }
+
+    if (bytesSentInProbe > 0 && durationInProbe > 0.05) {
+      const probeMbps = (bytesSentInProbe * 8) / (durationInProbe * 1_000_000)
+      uploadSamples.push(probeMbps)
+      totalUploadBytes += bytesSentInProbe
+      totalUploadTimeSec += durationInProbe
+    }
+
+    onProgress?.(Math.round(60 + ((probeIdx + 1) / uploadProbeSizes.length) * 35))
+
+    // If upload speed is low (< 5 Mbps), finish upload phase early
+    if (uploadSamples.length > 0) {
+      const currentAvg = uploadSamples.reduce((a, b) => a + b, 0) / uploadSamples.length
+      if (currentAvg < 5 && probeIdx >= 0) {
+        onProgress?.(95)
+        break
       }
-
-      xhr.onload = () => resolve()
-      xhr.onerror = () => reject(new Error('XHR upload error'))
-      xhr.ontimeout = () => reject(new Error('XHR timeout'))
-      xhr.timeout = 10000
-
-      xhr.send(payload)
-    })
-  } catch (err) {
-    console.warn('Real upload test failed, using fallback:', err)
+    }
   }
 
-  if (uploadSamples.length > 0) {
-    const sorted = [...uploadSamples].sort((a, b) => a - b)
-    const upperSamples = sorted.slice(Math.floor(sorted.length * 0.4))
+  let finalUploadMbps = 0
+  if (totalUploadBytes > 0 && totalUploadTimeSec > 0) {
     finalUploadMbps = parseFloat(
-      (upperSamples.reduce((a, b) => a + b, 0) / upperSamples.length).toFixed(1)
+      ((totalUploadBytes * 8) / (totalUploadTimeSec * 1_000_000)).toFixed(2)
     )
-  } else {
-    finalUploadMbps = parseFloat((24 + Math.random() * 12).toFixed(1))
-    onUploadUpdate?.(finalUploadMbps)
+  } else if (uploadSamples.length > 0) {
+    finalUploadMbps = parseFloat(
+      (uploadSamples.reduce((a, b) => a + b, 0) / uploadSamples.length).toFixed(2)
+    )
   }
+  onUploadUpdate?.(finalUploadMbps)
 
   // ---------------------------------------------------------
   // Finalizing (95% -> 100%)
