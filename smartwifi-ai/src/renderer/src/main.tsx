@@ -2,7 +2,7 @@ import './assets/main.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ThemeProvider, ToastProvider, WifiProvider, PreferencesProvider, NotificationProvider } from '@/context'
+import { ThemeProvider, ToastProvider, WifiProvider, PreferencesProvider, NotificationProvider, SpeedTestProvider } from '@/context'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(
@@ -11,9 +11,11 @@ createRoot(document.getElementById('root')!).render(
       <PreferencesProvider>
         <ToastProvider>
           <WifiProvider>
-            <NotificationProvider>
-              <App />
-            </NotificationProvider>
+            <SpeedTestProvider>
+              <NotificationProvider>
+                <App />
+              </NotificationProvider>
+            </SpeedTestProvider>
           </WifiProvider>
         </ToastProvider>
       </PreferencesProvider>

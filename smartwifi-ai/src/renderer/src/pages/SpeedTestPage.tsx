@@ -3,7 +3,7 @@ import { Gauge, Play, ArrowDown, ArrowUp, Activity, Server, RefreshCw, Trash2, I
 import { Card, CardHeader, CardContent, Button, ProgressBar } from '@/components/ui'
 import { SpeedometerGauge } from '@/components/SpeedometerGauge'
 import { executeRealSpeedTest, formatSpeedUnit, SpeedTestFinalResult } from '@/utils/speedTestRunner'
-import { useToast } from '@/context'
+import { useToast, useSpeedTest } from '@/context'
 
 interface TestResult {
   id?: number
@@ -35,6 +35,7 @@ function formatBytesPerSecond(mbps: number): string {
  */
 export function SpeedTestPage(): React.JSX.Element {
   const { showToast } = useToast()
+  const { setLastResult: setGlobalSpeedResult } = useSpeedTest()
   const [isRunning, setIsRunning] = useState(false)
   const [testPhase, setTestPhase] = useState<'idle' | 'ping' | 'download' | 'upload' | 'completed'>(
     'idle'
@@ -139,6 +140,16 @@ export function SpeedTestPage(): React.JSX.Element {
       setLiveGaugeMbps(result.downloadMbps)
       setIsRunning(false)
       setTestPhase('completed')
+
+      // Publish to global context so Dashboard can show real values
+      setGlobalSpeedResult({
+        downloadMbps: result.downloadMbps,
+        uploadMbps: result.uploadMbps,
+        pingMs: result.pingMs,
+        jitterMs: result.jitterMs,
+        server: result.server,
+        testedAt: new Date()
+      })
 
       // Save result to SQLite DB
       const now = new Date()

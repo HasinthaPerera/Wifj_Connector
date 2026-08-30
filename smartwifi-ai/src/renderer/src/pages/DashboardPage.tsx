@@ -19,7 +19,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import { Card, CardHeader, CardContent, Badge, ProgressBar, StatCard } from '@/components/ui'
-import { useWifi } from '@/context'
+import { useWifi, useSpeedTest } from '@/context'
 
 /* ─────────────────────────────────────────────────────────────
    Simulated network state (replaced by Electron IPC later)
@@ -422,6 +422,7 @@ function InfoRow({ label, value }: { label: string; value: string }): React.JSX.
 
 function DashboardPage(): React.JSX.Element {
   const { status } = useWifi()
+  const { lastResult: speedTestResult } = useSpeedTest()
   const [net, setNet] = useState<NetworkState>(INITIAL_STATE)
   const [pingHistory, setPingHistory] = useState<number[]>(generateInitialPingHistory)
   const [events] = useState<NetworkEvent[]>(INITIAL_EVENTS)
@@ -549,40 +550,47 @@ function DashboardPage(): React.JSX.Element {
 
       {/* ── KPI Stat Cards ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Download — real speed test value takes priority over simulation */}
         <StatCard
           title="Download"
-          value={fmtMbps(net.downloadMbps)}
+          value={speedTestResult ? fmtMbps(speedTestResult.downloadMbps) : fmtMbps(net.downloadMbps)}
           unit="Mbps"
           icon={<ArrowDownRight size={18} />}
-          trendValue={dlTrend}
+          trendValue={speedTestResult ? 0 : dlTrend}
           trendLabel={
-            Math.abs(dlTrend) < 0.5
-              ? 'Stable'
-              : `${dlTrend > 0 ? '+' : ''}${dlTrend.toFixed(1)} Mbps`
+            speedTestResult
+              ? `Last test · ${relTime(speedTestResult.testedAt.getTime())}`
+              : Math.abs(dlTrend) < 0.5
+                ? 'Stable'
+                : `${dlTrend > 0 ? '+' : ''}${dlTrend.toFixed(1)} Mbps`
           }
           colorClass="text-primary-600 dark:text-primary-400"
           bgClass="bg-primary-50 dark:bg-primary-950"
         />
+        {/* Upload — real speed test value takes priority over simulation */}
         <StatCard
           title="Upload"
-          value={fmtMbps(net.uploadMbps)}
+          value={speedTestResult ? fmtMbps(speedTestResult.uploadMbps) : fmtMbps(net.uploadMbps)}
           unit="Mbps"
           icon={<ArrowUpRight size={18} />}
           trendValue={0}
-          trendLabel="Stable"
+          trendLabel={speedTestResult ? `Last test · ${relTime(speedTestResult.testedAt.getTime())}` : 'Stable'}
           colorClass="text-accent-600 dark:text-accent-400"
           bgClass="bg-accent-50 dark:bg-accent-950"
         />
+        {/* Latency — real speed test value takes priority over simulation */}
         <StatCard
           title="Latency"
-          value={fmtMs(net.pingMs)}
+          value={speedTestResult ? fmtMs(speedTestResult.pingMs) : fmtMs(net.pingMs)}
           unit="ms"
           icon={<Activity size={18} />}
-          trendValue={pingTrend}
+          trendValue={speedTestResult ? 0 : pingTrend}
           trendLabel={
-            Math.abs(pingTrend) < 1
-              ? 'Stable'
-              : `${pingTrend > 0 ? '↓' : '↑'}${Math.abs(pingTrend).toFixed(0)} ms`
+            speedTestResult
+              ? `Jitter: ${speedTestResult.jitterMs} ms`
+              : Math.abs(pingTrend) < 1
+                ? 'Stable'
+                : `${pingTrend > 0 ? '↓' : '↑'}${Math.abs(pingTrend).toFixed(0)} ms`
           }
           colorClass="text-warning-600 dark:text-warning-400"
           bgClass="bg-warning-50 dark:bg-warning-950"
@@ -598,6 +606,24 @@ function DashboardPage(): React.JSX.Element {
           bgClass="bg-primary-50 dark:bg-primary-950"
         />
       </div>
+
+      {/* Speed test result banner — shows when real data is available */}
+      {speedTestResult && (
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-accent-500/10 border border-accent-500/25 text-xs animate-fade-in">
+          <Gauge size={14} className="text-accent-500 flex-shrink-0" />
+          <span className="text-[var(--text-secondary)]">
+            <span className="font-semibold text-[var(--text-primary)]">Speed Test Results</span>
+            {' '}applied to Download &amp; Upload ·{' '}
+            <span className="text-accent-500 font-medium">
+              {speedTestResult.downloadMbps.toFixed(2)} Mbps ↓ &nbsp;/&nbsp; {speedTestResult.uploadMbps.toFixed(2)} Mbps ↑
+            </span>
+            {' '}· <span className="text-[var(--text-muted)]">{relTime(speedTestResult.testedAt.getTime())}</span>
+          </span>
+          <NavLink to="/speed-test" className="ml-auto text-accent-500 hover:text-accent-600 font-semibold flex items-center gap-1 flex-shrink-0 transition-colors">
+            Re-test <ExternalLink size={11} />
+          </NavLink>
+        </div>
+      )}
 
       {/* ── Main 3-column grid ─────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
