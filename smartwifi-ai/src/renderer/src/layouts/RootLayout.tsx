@@ -266,8 +266,10 @@ function SidebarNav({ collapsed, onNavClick }: SidebarNavProps): React.JSX.Eleme
       {navigationSections.map((section) => (
         <div key={section.id} className="mb-4">
           {!collapsed && (
-            <p className="px-2.5 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+            <p className="px-2.5 mb-1.5 pt-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)] flex items-center gap-2">
+              <span className="flex-1 h-px bg-[var(--border-color)] opacity-60" />
               {section.title}
+              <span className="flex-1 h-px bg-[var(--border-color)] opacity-60" />
             </p>
           )}
           <ul className="space-y-0.5">
@@ -281,19 +283,19 @@ function SidebarNav({ collapsed, onNavClick }: SidebarNavProps): React.JSX.Eleme
                     onClick={onNavClick}
                     className={({ isActive }) =>
                       `
-                        flex items-center gap-3 px-2.5 py-2 rounded-lg
+                        relative flex items-center gap-3 px-2.5 py-2 rounded-lg
                         text-sm font-medium transition-all duration-150
-                        touch-target
+                        touch-target overflow-hidden
                         ${
                           isActive
-                            ? 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300 shadow-sm'
-                            : 'text-[var(--text-secondary)] hover:bg-surface-50 hover:text-[var(--text-primary)] dark:hover:bg-surface-800'
+                            ? 'nav-active'
+                            : 'text-[var(--text-secondary)] hover:bg-surface-50 hover:text-[var(--text-primary)] dark:hover:bg-surface-800/70'
                         }
                         ${collapsed ? 'justify-center' : ''}
                       `.trim()
                     }
                   >
-                    {IconComponent && <IconComponent size={18} className="flex-shrink-0" />}
+                    {IconComponent && <IconComponent size={17} className="flex-shrink-0" />}
                     {!collapsed && <span className="truncate">{item.label}</span>}
                     {!collapsed && item.badge && (
                       <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
@@ -323,7 +325,7 @@ interface SidebarLogoProps {
 function SidebarLogo({ collapsed, onClose }: SidebarLogoProps): React.JSX.Element {
   return (
     <div className="flex items-center gap-3 px-4 h-16 border-b border-[var(--border-color)] flex-shrink-0">
-      <div className="flex-shrink-0 w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+      <div className="flex-shrink-0 w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-sm ring-1 ring-primary-300/20">
         <Wifi size={16} className="text-white" />
       </div>
       {!collapsed && (
@@ -563,7 +565,7 @@ function RootLayout(): React.JSX.Element {
           signalStrength={78}
         />
 
-        {/* Page content — responsive padding */}
+        {/* Page content — responsive padding + per-route transition */}
         <main
           id="main-content"
           className="
@@ -571,7 +573,7 @@ function RootLayout(): React.JSX.Element {
             p-3 sm:p-4 md:p-5 lg:p-6
           "
         >
-          <div className="animate-fade-in">
+          <div key={location.pathname} className="animate-scale-in">
             <Outlet />
           </div>
         </main>

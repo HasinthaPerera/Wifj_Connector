@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Activity, Play, Square, Settings2, ShieldCheck, Wifi, WifiOff } from 'lucide-react'
 import { Card, CardHeader, CardContent, Button, Badge } from '@/components/ui'
@@ -213,8 +214,8 @@ export function PingMonitorPage(): React.JSX.Element {
   const jitterMs =
     validMs.length > 1
       ? Math.round(
-          Math.sqrt(validMs.reduce((acc, v) => acc + (v - (avgMs ?? 0)) ** 2, 0) / validMs.length)
-        )
+        Math.sqrt(validMs.reduce((acc, v) => acc + (v - (avgMs ?? 0)) ** 2, 0) / validMs.length)
+      )
       : null
   const timeouts = records.filter((r) => r.status === 'timeout').length
   const lossRate = records.length > 0 ? Math.round((timeouts / records.length) * 100) : 0
@@ -259,11 +260,10 @@ export function PingMonitorPage(): React.JSX.Element {
                 {TARGETS.map((t) => (
                   <button
                     key={t.host}
-                    className={`w-full text-left px-4 py-2.5 text-xs hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors ${
-                      selectedTarget.host === t.host
+                    className={`w-full text-left px-4 py-2.5 text-xs hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors ${selectedTarget.host === t.host
                         ? 'text-accent-500 font-bold'
                         : 'text-[var(--text-primary)]'
-                    }`}
+                      }`}
                     onClick={() => {
                       setSelectedTarget(t)
                       setShowTargetPicker(false)

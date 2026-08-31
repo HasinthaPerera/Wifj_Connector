@@ -89,11 +89,13 @@
   --shadow-glow-accent: 0 0 20px rgb(16 185 129 / 0.3);
 
   /* Animations */
-  --animate-fade-in: fade-in 0.3s ease-out;
-  --animate-slide-in-left: slide-in-left 0.3s ease-out;
-  --animate-slide-in-up: slide-in-up 0.3s ease-out;
+  --animate-fade-in: fade-in 0.25s ease-out;
+  --animate-slide-in-left: slide-in-left 0.25s ease-out;
+  --animate-slide-in-up: slide-in-up 0.25s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
   --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
   --animate-shimmer: shimmer 2s linear infinite;
+  --animate-count-flash: count-flash 0.4s ease-out;
 }
 
 /* ---------- Accent Color Palettes ------------------------- */
@@ -228,11 +230,40 @@
 @keyframes slide-in-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes count-flash {
+  0% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.4;
+    transform: scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -242,7 +273,7 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.65;
   }
 }
 
@@ -327,17 +358,22 @@
 
 /* ---------- Utilities ------------------------------------- */
 @layer utilities {
+  /* ── Glassmorphism ── */
   .glass {
-    background: rgb(255 255 255 / 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(255 255 255 / 0.2);
+    background: rgb(255 255 255 / 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgb(255 255 255 / 0.22);
   }
 
   .dark .glass {
-    background: rgb(15 23 42 / 0.7);
-    border: 1px solid rgb(255 255 255 / 0.06);
+    background: rgb(15 23 42 / 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgb(255 255 255 / 0.07);
   }
 
+  /* ── Gradients ── */
   .gradient-primary {
     background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
   }
@@ -353,12 +389,58 @@
     background-clip: text;
   }
 
-  /* ── Responsive layout helpers ── */
+  /* ── Animation utilities ── */
+  .animate-scale-in {
+    animation: var(--animate-scale-in);
+  }
 
-  /**
-   * Hide scrollbar while keeping scroll functionality.
-   * Used on the tablet icon-rail nav to avoid a scrollbar on a 68px panel.
-   */
+  .animate-count-flash {
+    animation: var(--animate-count-flash);
+  }
+
+  /* ── Focus ring utility (accessible keyboard nav) ── */
+  .focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .focus-ring:focus-visible {
+    outline-color: var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* ── Sidebar active nav pill ── */
+  .nav-active {
+    position: relative;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary-500) 12%, transparent),
+      color-mix(in srgb, var(--color-primary-500) 5%, transparent)
+    );
+    color: var(--color-primary-700);
+    font-weight: 600;
+  }
+
+  .nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    height: 60%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--color-primary-500);
+  }
+
+  .dark .nav-active {
+    color: var(--color-primary-300);
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary-400) 14%, transparent),
+      color-mix(in srgb, var(--color-primary-400) 5%, transparent)
+    );
+  }
+
+  /* ── Responsive layout helpers ── */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -367,10 +449,6 @@
     scrollbar-width: none;
   }
 
-  /**
-   * Touch-optimised tap target.
-   * Ensures nav items meet the WCAG 2.5.8 minimum 24×24 px target size.
-   */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
